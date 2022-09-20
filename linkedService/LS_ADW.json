@@ -1,0 +1,16 @@
+{
+	"name": "LS_ADW",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "Azure Synapse Dedicated SQL Pool",
+		"annotations": [],
+		"type": "AzureSqlDW",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=mfcsynap-sea-ngedl-nonprod-02.sql.azuresynapse.net;Initial Catalog=ngenedlkhsqlpool02"
+		},
+		"connectVia": {
+			"referenceName": "integrationRuntime1",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

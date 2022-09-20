@@ -1,0 +1,33 @@
+{
+	"name": "Test_ORC_ACID_Parquet_Conversion",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-08-16T10:50:08",
+				"endTime": "2022-08-26T00:50:08",
+				"timeZone": "SE Asia Standard Time",
+				"schedule": {
+					"minutes": [
+						57
+					],
+					"hours": [
+						10
+					]
+				}
+			}
+		}
+	}
+}

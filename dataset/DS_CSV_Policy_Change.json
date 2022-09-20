@@ -1,0 +1,62 @@
+{
+	"name": "DS_CSV_Policy_Change",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "abcmfcadoedl01dsea_DLG2",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "policy_change.csv",
+				"folderPath": "dev/raw/KH/Full/reports/policy_change/source",
+				"fileSystem": "jugaad"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "Transaction Date",
+				"type": "String"
+			},
+			{
+				"name": "Issue Date",
+				"type": "String"
+			},
+			{
+				"name": "Policy number",
+				"type": "String"
+			},
+			{
+				"name": "APE Adjustment",
+				"type": "String"
+			},
+			{
+				"name": "Channel",
+				"type": "String"
+			},
+			{
+				"name": "Reason",
+				"type": "String"
+			},
+			{
+				"name": "AM Code",
+				"type": "String"
+			},
+			{
+				"name": "AM/Bank Location",
+				"type": "String"
+			},
+			{
+				"name": "Bank Refer",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

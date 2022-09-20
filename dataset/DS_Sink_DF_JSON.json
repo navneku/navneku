@@ -1,0 +1,31 @@
+{
+	"name": "DS_Sink_DF_JSON",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_adls_sinkDF",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"schema_file_name": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "02 Data Validation Module DS"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().schema_file_name",
+					"type": "Expression"
+				},
+				"fileSystem": "schemas"
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

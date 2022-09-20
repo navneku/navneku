@@ -1,0 +1,25 @@
+{
+	"name": "wmktest",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Hour",
+				"interval": 2,
+				"startTime": "2022-07-25T15:00:00",
+				"endTime": "2022-07-30T16:15:00",
+				"timeZone": "SE Asia Standard Time"
+			}
+		}
+	}
+}

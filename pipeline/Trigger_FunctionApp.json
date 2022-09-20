@@ -1,0 +1,38 @@
+{
+	"name": "Trigger_FunctionApp",
+	"properties": {
+		"activities": [
+			{
+				"name": "Azure Function1",
+				"type": "AzureFunctionActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"functionName": {
+						"value": "TriggerCreation",
+						"type": "Expression"
+					},
+					"method": "POST",
+					"body": {
+						"value": "{\"body\": \"TriggerName\"}",
+						"type": "Expression"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "AzureFunction1",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-03-02T16:34:27Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

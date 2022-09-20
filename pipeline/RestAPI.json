@@ -1,0 +1,42 @@
+{
+	"name": "RestAPI",
+	"properties": {
+		"activities": [
+			{
+				"name": "Web1",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "https://management.azure.com/subscriptions/1c0dd436-50b8-4d50-9c6d-cb5d07d8db01/resourceGroups/SEA-ADO-EDL-NonProd-01/providers/Microsoft.DataFactory/factories/mfcdafangedlnonprodsea02/triggers/MyTrigger?api-version=2018-06-01",
+						"type": "Expression"
+					},
+					"connectVia": {
+						"referenceName": "integrationRuntime1",
+						"type": "IntegrationRuntimeReference"
+					},
+					"method": "PUT",
+					"body": {
+						"value": "{\n    \"properties\": {\n        \"type\": \"ScheduleTrigger\",\n        \"typeProperties\": {\n            \"recurrence\": {\n                \"frequency\": \"Minute\",\n                \"interval\":  15 ,\n                \"startTime\":  \"2017-12-08T00:00:00Z\" ,\n                \"endTime\":  \"2017-12-08T01:00:00Z\" ,\n                \"timeZone\": \"UTC\"\n            }\n        },\n        \"pipelines\": [{\n                \"pipelineReference\": {\n                    \"type\": \"PipelineReference\",\n                    \"referenceName\": \"pipeline1\"\n                }\n            }\n        ]\n    }\n}\n",
+						"type": "Expression"
+					},
+					"authentication": {
+						"type": "MSI",
+						"resource": "https://management.core.windows.net/"
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-08-20T03:21:36Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

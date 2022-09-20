@@ -1,0 +1,18 @@
+{
+	"name": "LS_databricks",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureDatabricks",
+		"typeProperties": {
+			"domain": "https://adb-3004414759823729.9.azuredatabricks.net",
+			"authentication": "MSI",
+			"workspaceResourceId": "/subscriptions/1c0dd436-50b8-4d50-9c6d-cb5d07d8db01/resourceGroups/SEA-ADO-EDL-NonProd-01/providers/Microsoft.Databricks/workspaces/mfcdabrngedlkhnprdsea01",
+			"existingClusterId": "0203-063942-wgh0a8l4"
+		},
+		"connectVia": {
+			"referenceName": "integrationRuntime1",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

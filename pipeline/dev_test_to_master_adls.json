@@ -1,0 +1,625 @@
+{
+	"name": "dev_test_to_master_adls",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata for yyyy",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": "dev",
+							"dir_name": {
+								"value": "@variables('dir_name')",
+								"type": "Expression"
+							},
+							"file_name": "*"
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata for yyyy",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata for yyyy').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Append variable yyyy",
+							"type": "AppendVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "date_yyyy_array",
+								"value": {
+									"value": "@int(item().name)",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Set variable latest path yyyy",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set variable max yyyy",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "latest_folder",
+					"value": {
+						"value": "@concat(variables('dir_name'),variables('max_yyyy'))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Get Metadata for mm",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Set variable latest path yyyy",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": "dev",
+							"dir_name": {
+								"value": "@variables('latest_folder')",
+								"type": "Expression"
+							},
+							"file_name": "*"
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "ForEach2",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata for mm",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata for mm').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Append variable mm",
+							"type": "AppendVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "date_mm_array",
+								"value": {
+									"value": "@int(item().name)",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Set variable max mm",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ForEach2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "max_mm",
+					"value": {
+						"value": "@if(equals(length(string(max(variables('date_mm_array')))),1),concat('0',string(max(variables('date_mm_array')))),string(max(variables('date_mm_array'))))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set variable max yyyy",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ForEach1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "max_yyyy",
+					"value": {
+						"value": "@string(max(variables('date_yyyy_array')))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set variable latest path mm",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set variable max mm",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "latest_folder",
+					"value": {
+						"value": "@concat(variables('dir_name'),variables('max_yyyy'),'/',variables('max_mm'))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Get Metadata for dd",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Set variable latest path mm",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": "dev",
+							"dir_name": {
+								"value": "@variables('latest_folder')",
+								"type": "Expression"
+							},
+							"file_name": "*"
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "ForEach3",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata for dd",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata for dd').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Append variable dd",
+							"type": "AppendVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "date_dd_array",
+								"value": {
+									"value": "@int(item().name)",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Set variable max dd",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ForEach3",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "max_dd",
+					"value": {
+						"value": "@if(equals(length(string(max(variables('date_dd_array')))),1),concat('0',string(max(variables('date_dd_array')))),string(max(variables('date_dd_array'))))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set variable latest path dd",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set variable max dd",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "latest_folder",
+					"value": {
+						"value": "@concat(variables('dir_name'),variables('max_yyyy'),'/',variables('max_mm'),'/',variables('max_dd'))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Get Metadata for hh",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Set variable latest path dd",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": "dev",
+							"dir_name": {
+								"value": "@variables('latest_folder')",
+								"type": "Expression"
+							},
+							"file_name": "*"
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "ForEach4",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata for hh",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata for hh').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Append variable hh",
+							"type": "AppendVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "date_hh_array",
+								"value": {
+									"value": "@int(item().name)",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Set variable max hh",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ForEach4",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "max_hh",
+					"value": {
+						"value": "@if(equals(length(string(max(variables('date_hh_array')))),1),concat('0',string(max(variables('date_hh_array')))),string(max(variables('date_hh_array'))))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set variable latest path hh",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set variable max hh",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "latest_folder",
+					"value": {
+						"value": "@concat(variables('dir_name'),variables('max_yyyy'),'/',variables('max_mm'),'/',variables('max_dd'),'/',variables('max_hh'),'/')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Get Metadata for file",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Set variable latest path hh",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": "dev",
+							"dir_name": {
+								"value": "@variables('latest_folder')",
+								"type": "Expression"
+							},
+							"file_name": "*"
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "ForEach5",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata for file",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get Metadata for file').output.childItems",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Append variable file",
+							"type": "AppendVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "file_array",
+								"value": {
+									"value": "@int(replace(substring(item().name,sub(length(item().name),24),16),'_',''))",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Set variable max file",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "ForEach5",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "file_name",
+					"value": {
+						"value": "@string(max(variables('file_array')))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set variable file name wildcard",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Set variable max file",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "file_name_wildcard",
+					"value": {
+						"value": "@concat('*',substring(variables('file_name'),0 ,4 ),'_',substring(variables('file_name'),4 ,2 ),'_',substring(variables('file_name'),6 ,2 ),'_',substring(variables('file_name'),8 ,2 ),'_',substring(variables('file_name'),10 ,2 ),'.parquet')",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"date_yyyy_array": {
+				"type": "Array"
+			},
+			"date_mm_array": {
+				"type": "Array"
+			},
+			"date_dd_array": {
+				"type": "Array"
+			},
+			"latest_folder": {
+				"type": "String"
+			},
+			"dir_name": {
+				"type": "String",
+				"defaultValue": "Raw/KH/Full/EDB/TPOLICYS/"
+			},
+			"max_yyyy": {
+				"type": "String"
+			},
+			"max_mm": {
+				"type": "String"
+			},
+			"max_dd": {
+				"type": "String"
+			},
+			"date_hh_array": {
+				"type": "Array"
+			},
+			"max_hh": {
+				"type": "String"
+			},
+			"file_array": {
+				"type": "Array"
+			},
+			"file_name": {
+				"type": "String"
+			},
+			"file_name_wildcard": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-05-31T04:17:01Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

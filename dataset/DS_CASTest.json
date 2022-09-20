@@ -1,0 +1,17 @@
+{
+	"name": "DS_CASTest",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_EDB",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "PostgreSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "cas",
+			"table": "tais_log"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

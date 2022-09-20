@@ -1,0 +1,69 @@
+{
+	"name": "PL_14_ADLS_FileLoad_Main_Poc",
+	"properties": {
+		"activities": [
+			{
+				"name": "If Condition1",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(pipeline().parameters.FwkItem['MultiFileCompressed'], 'Y')",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"FwkItem": {
+				"type": "array"
+			},
+			"PL_01TriggerTime": {
+				"type": "string"
+			},
+			"FwkLogId": {
+				"type": "string"
+			},
+			"EntRunId": {
+				"type": "string"
+			},
+			"SrcPath": {
+				"type": "string"
+			},
+			"SrcObject": {
+				"type": "string"
+			},
+			"SrcCompPath": {
+				"type": "string"
+			},
+			"SrcCompObject": {
+				"type": "string"
+			},
+			"MultiFileCompressed": {
+				"type": "string"
+			},
+			"CompressionType": {
+				"type": "string"
+			},
+			"SinkContainer": {
+				"type": "string"
+			},
+			"SinkDirectory": {
+				"type": "string"
+			},
+			"SinkMergeDirectory": {
+				"type": "string"
+			},
+			"ColDelimeter": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "BurtTest/TestIngestion"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-09-06T00:46:57Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

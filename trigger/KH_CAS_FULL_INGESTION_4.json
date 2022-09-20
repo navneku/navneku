@@ -1,0 +1,25 @@
+{
+	"name": "KH_CAS_FULL_INGESTION_4",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-09-01T12:10:00",
+				"endTime": "2022-09-01T12:30:00",
+				"timeZone": "SE Asia Standard time"
+			}
+		}
+	}
+}

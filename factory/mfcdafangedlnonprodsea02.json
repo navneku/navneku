@@ -1,0 +1,28 @@
+{
+	"name": "mfcdafangedlnonprodsea02",
+	"properties": {
+		"globalParameters": {
+			"SinkGlobalParameters": {
+				"type": "string"
+			},
+			"FunctionAppURL": {
+				"type": "string",
+				"value": "https//<F app name>.azurewebsites.net/api/TriggerCreation?"
+			},
+			"ServicePrincipalURL": {
+				"type": "string",
+				"value": "https://<serviceprincipalname>.azurewebsites.net"
+			},
+			"GetSchemaNotebook": {
+				"type": "string",
+				"value": "/shared/MDMF/DI_02_Get_Schema"
+			}
+		}
+	},
+	"location": "southeastasia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "958e59bd-8758-4033-b6dc-dc1e8a554e2b",
+		"tenantId": "5d3e2773-e07f-4432-a630-1a0f68a28a05"
+	}
+}

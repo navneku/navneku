@@ -1,0 +1,32 @@
+{
+	"name": "DS_Sink_DF",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_adls_sinkDF",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ConvertPath": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "02 Data Validation Module DS"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@dataset().ConvertPath",
+					"type": "Expression"
+				},
+				"fileSystem": "sink"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

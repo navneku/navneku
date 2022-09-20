@@ -1,0 +1,13 @@
+{
+	"name": "DS_ADW_DB",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADW",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

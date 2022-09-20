@@ -1,0 +1,28 @@
+{
+	"name": "DS_ORACLE",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Oracle",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FwkItem": {
+				"type": "array"
+			}
+		},
+		"annotations": [],
+		"type": "OracleTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().FwkItem['SchemaName']",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().FwkItem['SrcObject']",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

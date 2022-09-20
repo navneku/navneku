@@ -1,0 +1,923 @@
+{
+	"name": "PL_DATA_DS_ODBC_ttrxn_histories_To_DS_SYN_ttrxn_histories_weekly",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_DATA_DS_ODBC_ttrxn_history_To_DS_ADLS_ttrxn_history",
+				"description": "",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_DELETEFILE_ADLS_ttrxn_histories",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "OdbcSource",
+						"additionalColumns": [
+							{
+								"name": "Timestamp",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							}
+						],
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"parallelCopies": 4,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ODBC",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.edl_sch_name",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.edl_tbl_name",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": {
+								"value": "@activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_container",
+								"type": "Expression"
+							},
+							"dir_name": {
+								"value": "@concat(toLower(activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.env),activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_value,pipeline().parameters.system_name,'/',pipeline().parameters.adlsg2_file_name,'/',String(formatDateTime(utcnow(),'yyyy')),'/',String(formatDateTime(utcnow(),'MM')),'/',String(formatDateTime(utcnow(),'dd')))",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@concat(pipeline().parameters.system_name,'_',pipeline().parameters.adlsg2_file_name,'_',String(formatDateTime(utcnow(),'yyyy')),'_',String(formatDateTime(utcnow(),'MM')),'_',String(formatDateTime(utcnow(),'dd')),'_',pipeline().parameters.load_frequency)",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "ACT_CUSTOM_DELETEFILE_ADLS_ttrxn_histories",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_EXEC_GET_CONFIG_SETTING",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": {
+								"value": "@activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_container",
+								"type": "Expression"
+							},
+							"dir_name": {
+								"value": "@concat(toLower(activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.env),activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_value,pipeline().parameters.system_name,'/',pipeline().parameters.adlsg2_file_name,'/',String(formatDateTime(adddays(utcnow(),-7),'yyyy')),'/',String(formatDateTime(adddays(utcnow(),-7),'MM')),'/',String(formatDateTime(adddays(utcnow(),-7),'dd')))",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@concat(pipeline().parameters.system_name,'_',pipeline().parameters.adlsg2_file_name,'_',String(formatDateTime(adddays(utcnow(),-7),'yyyy')),'_',String(formatDateTime(adddays(utcnow(),-7),'MM')),'_',String(formatDateTime(adddays(utcnow(),-7),'dd')),'_',pipeline().parameters.load_frequency)",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": false,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "ACT_DATA_DS_ADLS_ttrxn_history_To_DS_SYN_ttrxn_history",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_EXEC_TRUNCATE_ttrxn_histories_weekly",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "SqlDWSink"
+					},
+					"enableStaging": false,
+					"parallelCopies": 4,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "ttrxn_histories.reasn_code",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "REASN_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.pd_to_dt",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "PD_TO_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.eff_dt",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "EFF_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.trxn_desc",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "TRXN_DESC",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.trxn_cd",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "TRXN_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.user_id",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "USER_ID",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.thi_num",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "THI_NUM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 4
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.trxn_dt",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "TRXN_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.pol_num",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "POL_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.user_input",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "USER_INPUT",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.action_dt",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "ACTION_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.sort_seq",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "SORT_SEQ",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.redo_mod_ind",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "REDO_MOD_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.redo_rpt_ind",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "REDO_RPT_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.orig_trxn_id",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "ORIG_TRXN_ID",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.crcy_code",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "CRCY_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.fcn_id",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "FCN_ID",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.undo_trxn_id",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "UNDO_TRXN_ID",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.trxn_id",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "TRXN_ID",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.thi_aex_num",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "THI_AEX_NUM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 4
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_histories.trxn_amt",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "TRXN_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "Timestamp"
+								},
+								"sink": {
+									"name": "Timestamp"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": {
+								"value": "@activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_container",
+								"type": "Expression"
+							},
+							"dir_name": {
+								"value": "@concat(toLower(activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.env),activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_value,pipeline().parameters.system_name,'/',pipeline().parameters.adlsg2_file_name,'/',String(formatDateTime(utcnow(),'yyyy')),'/',String(formatDateTime(utcnow(),'MM')),'/',String(formatDateTime(utcnow(),'dd')))",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@concat(pipeline().parameters.system_name,'_',pipeline().parameters.adlsg2_file_name,'_',String(formatDateTime(utcnow(),'yyyy')),'_',String(formatDateTime(utcnow(),'MM')),'_',String(formatDateTime(utcnow(),'dd')),'_',pipeline().parameters.load_frequency)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.synapse_sch_name",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.synapse_tbl_name",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "ACT_CUSTOM_EXEC_TRUNCATE_ttrxn_histories_weekly",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "ACT_DATA_DS_ODBC_ttrxn_history_To_DS_ADLS_ttrxn_history",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderQuery": {
+							"value": "@concat('truncate table ', pipeline().parameters.synapse_sch_name,'.',pipeline().parameters.synapse_tbl_name,';','select 0 id;')",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.synapse_sch_name",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.synapse_tbl_name",
+								"type": "Expression"
+							}
+						}
+					}
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_COPY_ERROR_LOG",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_DATA_DS_ODBC_ttrxn_history_To_DS_ADLS_ttrxn_history",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_DATA_DS_ODBC_ttrxn_history_To_DS_ADLS_ttrxn_history",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_DATA_DS_ODBC_ttrxn_history_To_DS_ADLS_ttrxn_history').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Copy data",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_DATA_DS_ODBC_ttrxn_history_To_DS_ADLS_ttrxn_history').output.errors[0].Code",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_DATA_DS_ODBC_ttrxn_history_To_DS_ADLS_ttrxn_history').output.errors[0].Message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_COPY2_ERROR_LOG",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_DATA_DS_ADLS_ttrxn_history_To_DS_SYN_ttrxn_history",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_DATA_DS_ADLS_ttrxn_history_To_DS_SYN_ttrxn_history",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_DATA_DS_ADLS_ttrxn_history_To_DS_SYN_ttrxn_history').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Copy data",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_DATA_DS_ADLS_ttrxn_history_To_DS_SYN_ttrxn_history').output.errors[0].Code",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_DATA_DS_ADLS_ttrxn_history_To_DS_SYN_ttrxn_history').output.errors[0].Message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_TRUNCATE_ERROR_LOG",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_EXEC_TRUNCATE_ttrxn_histories_weekly",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_CUSTOM_EXEC_TRUNCATE_ttrxn_histories_weekly",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_EXEC_TRUNCATE_ttrxn_histories_weekly').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Lookup",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_EXEC_TRUNCATE_ttrxn_histories_weekly').error.errorcode",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_EXEC_TRUNCATE_ttrxn_histories_weekly').error.message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_DELETION_ERROR_LOG",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_DELETEFILE_ADLS_ttrxn_histories",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_CUSTOM_DELETEFILE_ADLS_ttrxn_histories",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_DELETEFILE_ADLS_ttrxn_histories').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Delete",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_DELETEFILE_ADLS_ttrxn_histories').error.errorcode",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_DELETEFILE_ADLS_ttrxn_histories').error.message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_EXEC_GET_CONFIG_SETTING",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[config].[sp_get_configsetting]",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.synapse_sch_name",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.synapse_tbl_name",
+								"type": "Expression"
+							}
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"edl_sch_name": {
+				"type": "string",
+				"defaultValue": "kh_dev_published_src_cas_db"
+			},
+			"edl_tbl_name": {
+				"type": "string",
+				"defaultValue": "ttrxn_histories"
+			},
+			"adlsg2_file_name": {
+				"type": "string",
+				"defaultValue": "ttrxn_histories"
+			},
+			"system_name": {
+				"type": "string",
+				"defaultValue": "CAS"
+			},
+			"synapse_sch_name": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"synapse_tbl_name": {
+				"type": "string",
+				"defaultValue": "ttrxn_histories_weekly"
+			},
+			"load_frequency": {
+				"type": "string",
+				"defaultValue": "weekly"
+			}
+		},
+		"folder": {
+			"name": "E2E-Pipeline-Weekly-Load/CAS"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-11-26T09:08:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

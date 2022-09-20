@@ -1,0 +1,29 @@
+{
+	"name": "DS_ODBC_VC_Ad_Hoc_Param_based",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "HiveConnection_VC_CAS",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"sch_name": {
+				"type": "string",
+				"defaultValue": "sch_name"
+			},
+			"tbl_name": {
+				"type": "string",
+				"defaultValue": "tbl_name"
+			}
+		},
+		"annotations": [],
+		"type": "OdbcTable",
+		"schema": [],
+		"typeProperties": {
+			"tableName": {
+				"value": "@concat(dataset().sch_name,'.',dataset().tbl_name)",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

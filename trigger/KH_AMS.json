@@ -1,0 +1,33 @@
+{
+	"name": "KH_AMS",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-08-30T17:40:00",
+				"endTime": "2022-09-16T00:30:00",
+				"timeZone": "China Standard Time",
+				"schedule": {
+					"minutes": [
+						20
+					],
+					"hours": [
+						16
+					]
+				}
+			}
+		}
+	}
+}

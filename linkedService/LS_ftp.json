@@ -1,0 +1,43 @@
+{
+	"name": "LS_ftp",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "Connect to FTP using Integration Runtime, dynamic content, and Azure Key Vault to store the password.",
+		"parameters": {
+			"InstanceURL": {
+				"type": "object"
+			},
+			"Port": {
+				"type": "int"
+			},
+			"UserName": {
+				"type": "object"
+			},
+			"SecretName": {
+				"type": "object"
+			}
+		},
+		"annotations": [],
+		"type": "FtpServer",
+		"typeProperties": {
+			"host": "@{linkedService().InstanceURL}",
+			"port": "@linkedService().Port",
+			"enableSsl": true,
+			"enableServerCertificateValidation": false,
+			"authenticationType": "Basic",
+			"userName": "@{linkedService().UserName}",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_keyvault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": {
+					"value": "@{linkedService().SecretName}",
+					"type": "Expression"
+				},
+				"secretVersion": ""
+			}
+		}
+	}
+}

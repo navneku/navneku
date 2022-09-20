@@ -1,0 +1,44 @@
+{
+	"name": "PL_DataValidation",
+	"properties": {
+		"activities": [
+			{
+				"name": "Validation_Row_Coulmn_Count",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Shared/Test_Scripts (Shared)/KH_Migration/Databricks/KH_Oracle/Oracle_validation_Row_Coulmn_Count",
+					"baseParameters": {
+						"FwkConfig_value": {
+							"value": "@pipeline().parameters.LookupFwkConfig",
+							"type": "Expression"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_databricks",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"LookupFwkConfig": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "02 Validation"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-08-25T06:50:07Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,112 @@
+{
+	"name": "DS_ADLS_Demo_RJS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_adls_sinkHost",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "parquet_file/kh/dev",
+				"fileSystem": "dev"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "pol_num",
+				"type": "UTF8"
+			},
+			{
+				"name": "trxn_dt",
+				"type": "INT96"
+			},
+			{
+				"name": "thi_num",
+				"type": "DECIMAL",
+				"precision": 38,
+				"scale": 18
+			},
+			{
+				"name": "user_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "trxn_cd",
+				"type": "UTF8"
+			},
+			{
+				"name": "trxn_desc",
+				"type": "UTF8"
+			},
+			{
+				"name": "eff_dt",
+				"type": "INT96"
+			},
+			{
+				"name": "reasn_code",
+				"type": "UTF8"
+			},
+			{
+				"name": "pd_to_dt",
+				"type": "INT96"
+			},
+			{
+				"name": "trxn_amt",
+				"type": "DECIMAL",
+				"precision": 38,
+				"scale": 18
+			},
+			{
+				"name": "thi_aex_num",
+				"type": "DECIMAL",
+				"precision": 38,
+				"scale": 18
+			},
+			{
+				"name": "trxn_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "undo_trxn_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "fcn_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "crcy_code",
+				"type": "UTF8"
+			},
+			{
+				"name": "orig_trxn_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "redo_rpt_ind",
+				"type": "UTF8"
+			},
+			{
+				"name": "redo_mod_ind",
+				"type": "UTF8"
+			},
+			{
+				"name": "sort_seq",
+				"type": "UTF8"
+			},
+			{
+				"name": "action_dt",
+				"type": "INT96"
+			},
+			{
+				"name": "user_input",
+				"type": "UTF8"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,33 @@
+{
+	"name": "Q2CURATION_1",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-08-16T07:46:36",
+				"endTime": "2022-08-19T19:46:36",
+				"timeZone": "SE Asia Standard Time",
+				"schedule": {
+					"minutes": [
+						8
+					],
+					"hours": [
+						17
+					]
+				}
+			}
+		}
+	}
+}

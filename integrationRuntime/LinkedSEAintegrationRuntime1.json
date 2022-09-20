@@ -1,0 +1,13 @@
+{
+	"name": "LinkedSEAintegrationRuntime1",
+	"properties": {
+		"type": "SelfHosted",
+		"description": "Linked SHIR for KH ADF to RG Shared ADF SHIR",
+		"typeProperties": {
+			"linkedInfo": {
+				"resourceId": "/subscriptions/b9ae61d0-d92b-4fbe-911f-b31a72c18c4e/resourcegroups/SEA-ADO-EDL-RG-NonProd-01/providers/Microsoft.DataFactory/factories/mfcdafangedlrgnprdsea01/integrationruntimes/integrationRuntime1",
+				"authorizationType": "Rbac"
+			}
+		}
+	}
+}

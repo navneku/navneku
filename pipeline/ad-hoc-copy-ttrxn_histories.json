@@ -1,0 +1,64 @@
+{
+	"name": "ad-hoc-copy-ttrxn_histories",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "OdbcSource",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "SqlDWSink"
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ODBC_VC_Ad_Hoc_Param_based",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": "kh_dev_published_src_cas_db",
+							"tbl_name": "ttrxn_histories"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": "raw",
+							"tbl_name": "ttrxn_histories"
+						}
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "Ad-Hoc-Copy"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-11-15T09:36:30Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

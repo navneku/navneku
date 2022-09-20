@@ -1,0 +1,135 @@
+{
+	"name": "PL_14_File_Space_FTPFullLoad_Main",
+	"properties": {
+		"activities": [
+			{
+				"name": "If file contians space in header",
+				"description": "Evaluates the ‘LoadType’ and go in case it matches.",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(pipeline().parameters.FwkItem['HeaderSpaceFile'], 'Y')",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Execute Precondition pipeline",
+							"description": "This pipeline is used to execute all the inner activities that are included in the PL_14_File_Space_FTPFullLoad_Precon pipeline\n",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_14_File_Space_FTPFullLoad_Precon",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"FwkItem": {
+										"value": "@pipeline().parameters.FwkItem",
+										"type": "Expression"
+									},
+									"PL_01TriggerTime": {
+										"value": "@pipeline().parameters.PL_01TriggerTime",
+										"type": "Expression"
+									},
+									"FwkLogId": {
+										"value": "@pipeline().parameters.FwkLogId",
+										"type": "Expression"
+									},
+									"EntRunId": {
+										"value": "@pipeline().parameters.EntRunId",
+										"type": "Expression"
+									},
+									"SrcPath": {
+										"value": "@pipeline().parameters.SrcPath",
+										"type": "Expression"
+									},
+									"SrcObject": {
+										"value": "@pipeline().parameters.SrcObject",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "PL_14_FTPFullLoad_No_space_Header",
+							"description": "This pipeline is used to execute all the inner activities that are included in the PL_14_FTP_FullLoad_No_space_header pipeline\n",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Execute Precondition pipeline",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_14_FTPFullLoad_No_space_Header",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"FwkItem": {
+										"value": "@pipeline().parameters.FwkItem",
+										"type": "Expression"
+									},
+									"PL_01TriggerTime": {
+										"value": "@pipeline().parameters.PL_01TriggerTime",
+										"type": "Expression"
+									},
+									"FwkLogId": {
+										"value": "@pipeline().parameters.FwkLogId",
+										"type": "Expression"
+									},
+									"EntRunId": {
+										"value": "@pipeline().parameters.EntRunId",
+										"type": "Expression"
+									},
+									"SrcPath": {
+										"value": "@pipeline().parameters.SrcPath",
+										"type": "Expression"
+									},
+									"SrcObject": {
+										"value": "@pipeline().parameters.SrcObject",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"FwkItem": {
+				"type": "array"
+			},
+			"PL_01TriggerTime": {
+				"type": "string"
+			},
+			"FwkLogId": {
+				"type": "string"
+			},
+			"EntRunId": {
+				"type": "string"
+			},
+			"SrcPath": {
+				"type": "string"
+			},
+			"SrcObject": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "01 Ingestion Module/PL_14_File_Space_FTPFullLoad"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-09-05T07:28:52Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

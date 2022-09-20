@@ -1,0 +1,25 @@
+{
+	"name": "Q2CUR1",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-07-19T06:30:58",
+				"endTime": "2099-07-19T06:30:58",
+				"timeZone": "SE Asia Standard Time"
+			}
+		}
+	}
+}

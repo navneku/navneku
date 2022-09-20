@@ -1,0 +1,31 @@
+{
+	"name": "DI_01_CsvToParquet",
+	"properties": {
+		"folder": {
+			"name": "01 Data Ingestion"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "LS_adls_sinkDF",
+						"type": "LinkedServiceReference"
+					},
+					"name": "CSVSource"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_adls_sinkDF",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ParquetSink"
+				}
+			],
+			"transformations": [],
+			"script": "parameters{\n\tLandingPath as string,\n\tSinkPath as string\n}\nsource(useSchema: false,\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tformat: 'delimited',\n\tfileSystem: 'sink',\n\tcolumnDelimiter: ',',\n\tescapeChar: '\\\\',\n\tquoteChar: '\\\"',\n\tcolumnNamesAsHeader: true,\n\twildcardPaths:[($LandingPath)]) ~> CSVSource\nCSVSource sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\tfileSystem: 'sink',\n\tfolderPath: ($SinkPath),\n\tcompressionCodec: 'snappy',\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> ParquetSink"
+		}
+	}
+}

@@ -1,0 +1,283 @@
+{
+	"name": "PL_Data_Jugaad_ADLS_To_ADW_Demo",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_EXEC_GetSourceData",
+				"description": "Retrieve source data info",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "metadata_table_schema",
+						"value": "dbo"
+					},
+					{
+						"name": "metadata_table_name",
+						"value": "test_table_2"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[demo].[Get_SourceData_List]",
+						"storedProcedureParameters": {
+							"sourcesystemname": {
+								"type": "String",
+								"value": {
+									"value": "@variables('source_system')",
+									"type": "Expression"
+								}
+							},
+							"targetsystemname": {
+								"type": "String",
+								"value": {
+									"value": "@variables('target_system')",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_ADW_DB",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "ACT_EXEC_GetSourceData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('ACT_EXEC_GetSourceData').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Truncate_Table_Synapse",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderQuery": {
+										"value": "@concat('truncate table ', item().TargetSchemaName,'.',item().TargEtentityName,';','select 0 id;')",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_ADW_DB",
+									"type": "DatasetReference"
+								}
+							}
+						},
+						{
+							"name": "copy_data_from_adls_to_adw",
+							"description": "copy data from jugaad adls to jugaad azure synapse db",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "lookup1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"maxConcurrentConnections": 4,
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "SqlDWSink",
+									"writeBatchSize": 5000,
+									"maxConcurrentConnections": 4,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"parallelCopies": 4,
+								"dataIntegrationUnits": 4,
+								"translator": {
+									"value": "@json(activity('lookup1').output.firstRow.json_output)",
+									"type": "Expression"
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ADLS",
+									"type": "DatasetReference",
+									"parameters": {
+										"container_name": {
+											"value": "@item().SourceContainerName",
+											"type": "Expression"
+										},
+										"dir_name": {
+											"value": "@item().SourceEntityURL",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@item().SourceFileName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_SYN",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@item().TargetSchemaName",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@item().TargetEntityName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "lookup1",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "Truncate_Table_Synapse",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderStoredProcedureName": "[demo].[sp_getSourceTaretColumnMapping]",
+									"storedProcedureParameters": {
+										"source_schema_name": {
+											"type": "String",
+											"value": {
+												"value": "@item().SourceSchemaName",
+												"type": "Expression"
+											}
+										},
+										"source_system_name": {
+											"type": "String",
+											"value": {
+												"value": "@item().SourceSystem",
+												"type": "Expression"
+											}
+										},
+										"source_table_name": {
+											"type": "String",
+											"value": {
+												"value": "@item().SourceEntityName",
+												"type": "Expression"
+											}
+										},
+										"target_schema_name": {
+											"type": "String",
+											"value": {
+												"value": "@item().TargetSchemaName",
+												"type": "Expression"
+											}
+										},
+										"target_system_name": {
+											"type": "String",
+											"value": {
+												"value": "@item().TargetSystem",
+												"type": "Expression"
+											}
+										},
+										"target_table_name": {
+											"type": "String",
+											"value": {
+												"value": "@item().TargetEntityName",
+												"type": "Expression"
+											}
+										}
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_ADW_DB",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": true
+							}
+						}
+					]
+				}
+			}
+		],
+		"concurrency": 20,
+		"variables": {
+			"source_system": {
+				"type": "String",
+				"defaultValue": "jugaad_adls"
+			},
+			"target_system": {
+				"type": "String",
+				"defaultValue": "jugaad_adw"
+			}
+		},
+		"folder": {
+			"name": "Non-Prod testing and POC only"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-11-15T09:37:35Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

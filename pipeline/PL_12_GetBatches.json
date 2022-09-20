@@ -1,0 +1,115 @@
+{
+	"name": "PL_12_GetBatches",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookupFwkConfigBatches",
+				"description": "Executes the SP 'sps_LookupFwkConfigBatches' to get the batch Id value.",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[dbo].[sps_LookupFwkConfigBatches]",
+						"storedProcedureParameters": {
+							"AdfName": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().DataFactory",
+									"type": "Expression"
+								}
+							},
+							"TriggerName": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.TriggerName",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLSYN_Configuration",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachBatch",
+				"description": "Loops in every batch values, to only load all files with that Id at a time.",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookupFwkConfigBatches",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LookupFwkConfigBatches').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Execute PL_01_GetSourceData",
+							"description": "This pipeline is used to execute all the inner activities that are included in the ingestion module.",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_01_GetSourceData",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"EntRunId": {
+										"value": "@pipeline().parameters.EntRunId",
+										"type": "Expression"
+									},
+									"TriggerName": {
+										"value": "@pipeline().parameters.TriggerName",
+										"type": "Expression"
+									},
+									"BatchGroupId": {
+										"value": "@item().BatchGroupId",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"EntRunId": {
+				"type": "string"
+			},
+			"TriggerName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "01 Ingestion Module"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-08-29T06:44:20Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

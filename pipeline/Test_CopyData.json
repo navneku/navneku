@@ -1,0 +1,43 @@
+{
+	"name": "Test_CopyData",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata1",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS_Demo",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						{
+							"value": "structure",
+							"type": "Expression"
+						}
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "KH_Test"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-09-15T08:13:19Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

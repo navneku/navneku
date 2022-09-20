@@ -1,0 +1,25 @@
+{
+	"name": "KH_GLH_Missing2",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-09-19T17:08:00",
+				"endTime": "2022-09-19T17:45:00",
+				"timeZone": "China Standard Time"
+			}
+		}
+	}
+}

@@ -1,0 +1,44 @@
+{
+	"name": "ManagingTriggers",
+	"properties": {
+		"activities": [
+			{
+				"name": "Wait1",
+				"type": "Wait",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"waitTimeInSeconds": 3
+				}
+			},
+			{
+				"name": "A trigger",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Wait1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "A_Trigger",
+					"value": {
+						"value": "Some TriggerName has been scheduled",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"A_Trigger": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-03-03T18:33:53Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

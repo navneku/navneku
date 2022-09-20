@@ -1,0 +1,27 @@
+{
+	"name": "DS_ODBC",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ODBC",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"sch_name": {
+				"type": "string"
+			},
+			"tbl_name": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "OdbcTable",
+		"schema": [],
+		"typeProperties": {
+			"tableName": {
+				"value": "@concat(dataset().sch_name,'.',dataset().tbl_name)",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,154 @@
+{
+	"name": "PL_DATA_DS_ODBC_tglh_bill_headers_To_DS_SYN_tglh_bill_headers_weekly",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_DATA_DS_ODBC_billheaders_To_DS_ADLS_billheaders",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_EXEC_GET_CONFIG_SETTING",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "OdbcSource",
+						"additionalColumns": [
+							{
+								"name": "Timestamp",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							}
+						],
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"parallelCopies": 16,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ODBC",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.edl_sch_name",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.edl_tbl_name",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": {
+								"value": "@activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_container",
+								"type": "Expression"
+							},
+							"dir_name": {
+								"value": "@concat(toLower(activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.env),activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_value,pipeline().parameters.system_name,'/',pipeline().parameters.adlsg2_file_name,'/',String(formatDateTime(utcnow(),'yyyy')),'/',String(formatDateTime(utcnow(),'MM')),'/',String(formatDateTime(utcnow(),'dd')))",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@concat(pipeline().parameters.system_name,'_',pipeline().parameters.adlsg2_file_name,'_',String(formatDateTime(utcnow(),'yyyy')),'_',String(formatDateTime(utcnow(),'MM')),'_',String(formatDateTime(utcnow(),'dd')),'_',pipeline().parameters.load_frequency,'.parquet')",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "ACT_CUSTOM_EXEC_GET_CONFIG_SETTING",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[config].[sp_get_configsetting]",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": "raw",
+							"tbl_name": "tglh_bill_headers"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"edl_sch_name": {
+				"type": "string",
+				"defaultValue": "kh_dev_published_src_glh_db"
+			},
+			"edl_tbl_name": {
+				"type": "string",
+				"defaultValue": "tglh_bill_headers"
+			},
+			"adlsg2_file_name": {
+				"type": "string",
+				"defaultValue": "tglh_bill_headers"
+			},
+			"system_name": {
+				"type": "string",
+				"defaultValue": "GLH"
+			},
+			"load_frequency": {
+				"type": "string",
+				"defaultValue": "weekly"
+			}
+		},
+		"folder": {
+			"name": "E2E-Pipeline-Weekly-Load/GLH"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-06-10T07:53:48Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

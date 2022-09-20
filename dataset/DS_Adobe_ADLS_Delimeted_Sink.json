@@ -1,0 +1,25 @@
+{
+	"name": "DS_Adobe_ADLS_Delimeted_Sink",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_blobcsv",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "hit_data.tsv",
+				"folderPath": "Staging/Merged",
+				"container": "dev"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,127 @@
+{
+	"name": "POC_Adobe_DeltaLoad_copy1",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get FileName List",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Set variable",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_Adobe_FTP_Binary_Source",
+						"type": "DatasetReference",
+						"parameters": {
+							"Path": {
+								"value": "/home/sqoop/adobe/ph_adobe_allsites",
+								"type": "Expression"
+							},
+							"Object": {
+								"value": "manufin-manulifecomph-prod_*.zip",
+								"type": "Expression"
+							},
+							"CompressionType": {
+								"value": "ZipDeflate",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "SftpReadSettings",
+						"recursive": true,
+						"modifiedDatetimeStart": {
+							"value": "@convertToUtc('2022-08-27 00:00:00.000', 'China Standard Time')",
+							"type": "Expression"
+						},
+						"modifiedDatetimeEnd": {
+							"value": "@utcNow()",
+							"type": "Expression"
+						},
+						"enablePartitionDiscovery": false,
+						"disableChunking": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Set variable",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "LookupLastRefresh",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "LastRefresh",
+					"value": {
+						"value": "@activity('LookupLastRefresh').output.FirstRow.LastRefresh",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "LookupLastRefresh",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[dbo].[sps_LookupFwkWatermarkPrecon]",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": "sch_name",
+							"tbl_name": "tbl_name"
+						}
+					}
+				}
+			}
+		],
+		"variables": {
+			"LastRefresh": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "ProjTeam_POC"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-09-04T14:03:55Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

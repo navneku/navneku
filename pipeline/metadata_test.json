@@ -1,0 +1,182 @@
+{
+	"name": "metadata_test",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "listtable",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('listtable').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Lookup1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "OdbcSink",
+									"writeBatchSize": 0
+								},
+								"enableStaging": false,
+								"translator": {
+									"value": "@json(activity('Lookup1').output.firstRow.json_output)",
+									"type": "Expression"
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ADLS",
+									"type": "DatasetReference",
+									"parameters": {
+										"container_name": "jugaad",
+										"dir_name": "dev/raw/KH/Full/CAS/SampleData/2021/11/02/",
+										"file_name": "CAS_SampleData_2021_11_02"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ODBC",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@item().SCHEMA_NAME",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@item().table_name",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Lookup1",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderStoredProcedureName": "[dbo].[sp_getColumnMapping_2]",
+									"storedProcedureParameters": {
+										"schema_name": {
+											"type": "String",
+											"value": {
+												"value": "@item().SCHEMA_NAME",
+												"type": "Expression"
+											}
+										},
+										"table_name": {
+											"type": "String",
+											"value": {
+												"value": "@item().table_name",
+												"type": "Expression"
+											}
+										}
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SYN",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@item().SCHEMA_NAME",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@item().table_name",
+											"type": "Expression"
+										}
+									}
+								},
+								"firstRowOnly": true
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "listtable",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderQuery": "select distinct SCHEMA_NAME,table_name from dbo.columnmapping_2",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": "dbo",
+							"tbl_name": "test_table_2"
+						}
+					},
+					"firstRowOnly": false
+				}
+			}
+		],
+		"folder": {
+			"name": "Non-Prod testing and POC only"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-11-15T09:51:38Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

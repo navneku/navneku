@@ -1,0 +1,61 @@
+{
+	"name": "pipeline3",
+	"properties": {
+		"activities": [
+			{
+				"name": "spu_UpdateWmkInt",
+				"description": "Executes the SP ‘spu_FwkWatermarkIntUpdate’ to Update the watermark value for objects using watermark datatype \"1\"",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[spu_FwkWatermarkIntUpdate]",
+					"storedProcedureParameters": {
+						"NewValueWmkInt": {
+							"value": {
+								"value": "4",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"SrcObjectChild": {
+							"value": {
+								"value": "testtable",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"FwkConfigId": {
+							"value": {
+								"value": "6",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"ConvertPath": {
+							"value": {
+								"value": "Converted/SYN/ngenedlkhsqlpool02/dbo/testtable/2022/03/10/19/",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-03-10T19:49:00Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

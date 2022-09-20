@@ -1,0 +1,168 @@
+{
+	"name": "polybase_ttrxnLog",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_DATA_DS_ADLS_ttrxn_logs_To_DS_SYN_ttrxn_logs",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "SqlDWSink",
+						"allowPolyBase": true,
+						"polyBaseSettings": {
+							"rejectValue": 0,
+							"rejectType": "value",
+							"useTypeDefault": true
+						}
+					},
+					"enableStaging": false,
+					"parallelCopies": 16,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "ttrxn_logs.txl_num",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "TXL_NUM",
+									"type": "Decimal"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_logs.act_mode",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ACT_MODE",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_logs.tbl_nm",
+									"type": "String"
+								},
+								"sink": {
+									"name": "TBL_NM",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_logs.prim_key",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PRIM_KEY",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_logs.pol_num",
+									"type": "String"
+								},
+								"sink": {
+									"name": "POL_NUM",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_logs.old_valu",
+									"type": "String"
+								},
+								"sink": {
+									"name": "OLD_VALU",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_logs.new_valu",
+									"type": "String"
+								},
+								"sink": {
+									"name": "NEW_VALU",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_logs.trxn_id",
+									"type": "String"
+								},
+								"sink": {
+									"name": "TRXN_ID",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "ttrxn_logs.col_nm",
+									"type": "String"
+								},
+								"sink": {
+									"name": "COL_NM",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "Timestamp"
+								},
+								"sink": {
+									"name": "Timestamp"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": "containerngenedlkhprd01",
+							"dir_name": "prod/KH/Full/CAS/ttrxn_logs/2021/11/17",
+							"file_name": "CAS_ttrxn_logs_2021_11_17_weekly"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": "raw",
+							"tbl_name": "test_ttrxn_logs_test"
+						}
+					}
+				]
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2021-11-26T09:08:25Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

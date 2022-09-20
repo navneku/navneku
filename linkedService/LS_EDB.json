@@ -1,0 +1,24 @@
+{
+	"name": "LS_EDB",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "PostgreSql connector for EDB KH",
+		"annotations": [],
+		"type": "PostgreSql",
+		"typeProperties": {
+			"connectionString": "Host=10.235.202.16;Port=5444;Database=deploy_test_2;UID=cdc_debezium;EncryptionMethod=0",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_keyvault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "EDBnonprod"
+			}
+		},
+		"connectVia": {
+			"referenceName": "integrationRuntime1",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

@@ -1,0 +1,25 @@
+{
+	"name": "MDMFTest5",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Hour",
+				"interval": 1,
+				"startTime": "2022-06-28T15:00:00",
+				"endTime": "2022-06-28T18:45:00",
+				"timeZone": "SE Asia Standard Time"
+			}
+		}
+	}
+}

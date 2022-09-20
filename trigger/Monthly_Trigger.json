@@ -1,0 +1,35 @@
+{
+	"name": "Monthly_Trigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_EXEC_MONTHLY_LOAD",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Month",
+				"interval": 1,
+				"startTime": "2021-11-10T06:23:00",
+				"timeZone": "China Standard Time",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						6
+					],
+					"monthDays": [
+						-1
+					]
+				}
+			}
+		}
+	}
+}

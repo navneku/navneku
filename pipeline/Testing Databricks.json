@@ -1,0 +1,33 @@
+{
+	"name": "Testing Databricks",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_cvg_weekly",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[curated].[sp_cip_kh_cvg_weekly]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"folder": {
+			"name": "E2E-Pipeline-Weekly-Load"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-02-15T01:41:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

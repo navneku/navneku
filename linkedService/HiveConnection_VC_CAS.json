@@ -1,0 +1,19 @@
+{
+	"name": "HiveConnection_VC_CAS",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "Odbc",
+		"typeProperties": {
+			"connectionString": {
+				"type": "SecureString",
+				"value": "**********"
+			},
+			"authenticationType": "Anonymous"
+		},
+		"connectVia": {
+			"referenceName": "integrationRuntime1",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

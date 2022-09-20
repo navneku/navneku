@@ -1,0 +1,1764 @@
+{
+	"name": "PL_11_DataTransformation",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup_Dt_NoDependencies",
+				"description": "Executes the SP ‘sps_LookupDt’ to read and return to the ADF the last FwkRunId of the current execution.",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Sp_DtLogInsert_Default",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "InsertIntoFwkLog",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[dbo].[sps_LookupDt]",
+						"storedProcedureParameters": {
+							"EntRunId": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.EntRunId",
+									"type": "Expression"
+								}
+							},
+							"TriggerName": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.TriggerName",
+									"type": "Expression"
+								}
+							},
+							"DependencyFlag": {
+								"type": "Int16",
+								"value": "0"
+							},
+							"PipelineTriggerTime": {
+								"type": "Datetime",
+								"value": {
+									"value": "@formatDateTime(pipeline().TriggerTime,'yyyy-MM-dd HH:mm:ss')",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLSYN_Configuration",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachTransformationwithNoDependencies",
+				"description": "Iterates over a dataset and loop by number of rows it gets with the output from ‘Lookup_Dt_NoDependencies’ activity.",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "ForEachTransformationwithNoDependencies_SynapseSP",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup_Dt_NoDependencies').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "DtMethod",
+							"description": "Validates the value of the ‘DtMethod’ parameter",
+							"type": "Switch",
+							"dependsOn": [
+								{
+									"activity": "LookupFailedStatus",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@if(OR(equals(activity('LookupFailedStatus').output.count,1),equals(item().DtLogId,NULL))\n,coalesce(item().DtMethod,'DataFlow'),'SkipTransformation')",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "DataFlow",
+										"activities": [
+											{
+												"name": "Execute PL_11 DataTransformation_Dataflow",
+												"description": "Invokes the ‘PL_11 DataTransformation_Dataflow’ pipeline and send the parameters returned by ‘FileTransformationName’, ‘TransformationPathGranularity’, ‘FunctionName’, ‘OutputUpdateDate’, ‘DtOutputId’, \n‘DtConfigId’, ‘EntRunId’, and ‘DtRunId’.\n",
+												"type": "ExecutePipeline",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "PL_11_1_DataTransformation_DataFlow",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"FunctionName": {
+															"value": "@item().FunctionName",
+															"type": "Expression"
+														},
+														"SinkPath": {
+															"value": "@item().SinkPath",
+															"type": "Expression"
+														},
+														"Output": {
+															"value": "@activity('Lookup_Dt_DataSet_Output').output.value",
+															"type": "Expression"
+														},
+														"DtDataSetId": {
+															"value": "@item().DtDataSetId",
+															"type": "Expression"
+														},
+														"OutputPath": {
+															"value": "@item().OutputPath",
+															"type": "Expression"
+														},
+														"PL_11_TriggerTime": {
+															"value": "@pipeline().TriggerTime",
+															"type": "Expression"
+														},
+														"LogOutputUpdateDate": {
+															"value": "@item().OutputUpdateDate",
+															"type": "Expression"
+														},
+														"DtLogId": {
+															"value": "@item().DtLogId",
+															"type": "Expression"
+														},
+														"FlagUpdateOutputDate": {
+															"value": "@item().FlagUpdateOutputDate",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
+									},
+									{
+										"value": "Databricks",
+										"activities": [
+											{
+												"name": "DT_Notebook",
+												"description": "Execute a notebook according every transformation",
+												"type": "DatabricksNotebook",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"notebookPath": {
+														"value": "@item().NotebookPath",
+														"type": "Expression"
+													},
+													"baseParameters": {
+														"SinkGlobalParameters": {
+															"value": "@string(pipeline().globalParameters.SinkGlobalParameters)",
+															"type": "Expression"
+														},
+														"DataTransformationParameters": {
+															"value": "@string(item())",
+															"type": "Expression"
+														},
+														"OutputParameters": {
+															"value": "@string(activity('Lookup_Dt_DataSet_Output').output.value)",
+															"type": "Expression"
+														},
+														"TriggerTime": {
+															"value": "@formatDateTime(if(equals(item().DtLogId,NULL),pipeline().TriggerTime,item().OutputUpdateDate),'yyyy-MM-dd HH:mm:ss')",
+															"type": "Expression"
+														},
+														"InputParameter": {
+															"value": "@string(item().InputParameter)",
+															"type": "Expression"
+														}
+													}
+												},
+												"linkedServiceName": {
+													"referenceName": "LS_databricks",
+													"type": "LinkedServiceReference"
+												}
+											},
+											{
+												"name": "spu_DtDsOutputUpdate",
+												"description": "Update table DtDsOutput with an SP 'spu_DtDsOutputUpdate'",
+												"type": "SqlServerStoredProcedure",
+												"dependsOn": [
+													{
+														"activity": "DT_Notebook",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"storedProcedureName": "[dbo].[spu_DtDsOutputUpdate]",
+													"storedProcedureParameters": {
+														"DtDataSetId": {
+															"value": {
+																"value": "@if(equals(item().DtLogId,NULL),item().DtDataSetId,\nif(equals(split(item().FlagUpdateOutputDate,';')[0],1),item().DtDataSetId,NULL))",
+																"type": "Expression"
+															},
+															"type": "Int64"
+														},
+														"DtOutputId": {
+															"value": {
+																"value": "@if(equals(item().DtLogId,NULL),if(equals(activity('Lookup_Dt_DataSet_Output').output.count, 0), NULL, activity('Lookup_Dt_DataSet_Output').output.value[0].DtOutputId),\r\nif(equals(split(item().FlagUpdateOutputDate,';')[0],1), if(equals(activity('Lookup_Dt_DataSet_Output').output.count, 0), NULL, activity('Lookup_Dt_DataSet_Output').output.value[0].DtOutputId),NULL))",
+																"type": "Expression"
+															},
+															"type": "String"
+														},
+														"OutputUpdateDate": {
+															"value": {
+																"value": "@if(equals(item().DtLogId,NULL),pipeline().TriggerTime,\nif(equals(split(item().FlagUpdateOutputDate,';')[0],1),item().OutputUpdateDate,pipeline().TriggerTime))",
+																"type": "Expression"
+															},
+															"type": "DateTime"
+														}
+													}
+												},
+												"linkedServiceName": {
+													"referenceName": "LS_SYN",
+													"type": "LinkedServiceReference"
+												}
+											}
+										]
+									}
+								]
+							}
+						},
+						{
+							"name": "Lookup_Dt_DataSet_Output",
+							"description": "Executes the SP ‘sps_ Lookup_Dt_DataSet_Output’ to read and returned to the ADF the last EntRunId of the current execution.",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderStoredProcedureName": "[dbo].[sps_LookupDt_DataSet_DtOutput]",
+									"storedProcedureParameters": {
+										"DtDataSetId": {
+											"type": "String",
+											"value": {
+												"value": "@item().DtDataSetId",
+												"type": "Expression"
+											}
+										},
+										"DtConfigId": {
+											"type": "String",
+											"value": {
+												"value": "@item().DtConfigId",
+												"type": "Expression"
+											}
+										},
+										"ParentDtConfigId": {
+											"type": "Int64",
+											"value": {
+												"value": "@item().ParentDtConfigId",
+												"type": "Expression"
+											}
+										},
+										"EntRunId": {
+											"type": "String",
+											"value": {
+												"value": "@pipeline().parameters.EntRunId",
+												"type": "Expression"
+											}
+										},
+										"DtRunId": {
+											"type": "String",
+											"value": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											}
+										}
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SQLSYN_Configuration",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": false
+							}
+						},
+						{
+							"name": "sp_FillDtUpdateSuccess",
+							"description": "Update log table just for the transformation that were performed with successful status",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "DtMethod",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_DtLogUpdte]",
+								"storedProcedureParameters": {
+									"DtOutputId": {
+										"value": {
+											"value": "@if(OR(equals(activity('LookupFailedStatus').output.count,1),equals(item().DtLogId,NULL))\r\n,if(equals(activity('Lookup_Dt_DataSet_Output').output.count,0), NULL, activity('Lookup_Dt_DataSet_Output').output.value[0].DtOutputId),NULL)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtConfigId": {
+										"value": {
+											"value": "@item().DtConfigId",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"EntRunId": {
+										"value": {
+											"value": "@if(not(equals(item().DtLogId,NULL)),item().EntRunId,pipeline().parameters.EntRunId)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtRunId": {
+										"value": {
+											"value": "@if(not(equals(item().DtLogId,NULL)),item().DtRunId,pipeline().RunId)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtStatus": {
+										"value": "Succeded",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "sp_UpdateDtLogFail",
+							"description": "Update log table just for the transformation that were performed with fail status.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "DtMethod",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_DtLogUpdte]",
+								"storedProcedureParameters": {
+									"DtOutputId": {
+										"value": {
+											"value": "@if(OR(equals(activity('LookupFailedStatus').output.count,1),equals(item().DtLogId,NULL))\n,if(equals(activity('Lookup_Dt_DataSet_Output').output.count,0), NULL, activity('Lookup_Dt_DataSet_Output').output.value[0].DtOutputId),NULL)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtConfigId": {
+										"value": {
+											"value": "@item().DtConfigId",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"EntRunId": {
+										"value": {
+											"value": "@if(not(equals(item().DtLogId,NULL)),item().EntRunId,pipeline().parameters.EntRunId)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtRunId": {
+										"value": {
+											"value": "@if(not(equals(item().DtLogId,NULL)),item().DtRunId,pipeline().RunId)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtStatus": {
+										"value": "Failed",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "If Null Status-Failed Transformations",
+							"description": "Check transformation output files that previously fail (DtLogId NOT NULL) with status of NULL ",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Lookup_Dt_DataSet_Output",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@and(not(equals(item().DtLogId,NULL)),equals(item().DtStatus,NULL))",
+									"type": "Expression"
+								},
+								"ifTrueActivities": [
+									{
+										"name": "PL11_2_DataTransformation_CheckOutputFiles",
+										"description": "Invokes the ‘PL11_2_DataTransformation_CheckOutputFiles’ pipeline and send the parameters returned by ‘FileTransformationName’, ‘TransformationPathGranularity’, ‘FunctionName’, ‘OutputUpdateDate’, ‘DtOutputId’, \n‘DtConfigId’, ‘EntRunId’, and ‘DtRunId’.\n",
+										"type": "ExecutePipeline",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"pipeline": {
+												"referenceName": "PL_11_2_DataTransformation_CheckOutputFiles",
+												"type": "PipelineReference"
+											},
+											"waitOnCompletion": true,
+											"parameters": {
+												"FileTransformationName": {
+													"value": "@activity('Lookup_Dt_DataSet_Output').output.value[0].FileTransformationName",
+													"type": "Expression"
+												},
+												"TransformationPathGranularity": {
+													"value": "@activity('Lookup_Dt_DataSet_Output').output.value[0].TransformationPathGranularity",
+													"type": "Expression"
+												},
+												"FunctionName": {
+													"value": "@item().FunctionName",
+													"type": "Expression"
+												},
+												"OutputUpdateDate": {
+													"value": "@item().OutputUpdateDate",
+													"type": "Expression"
+												},
+												"DtOutputId": {
+													"value": "@activity('Lookup_Dt_DataSet_Output').output.value[0].DtOutputId",
+													"type": "Expression"
+												},
+												"DtConfigId": {
+													"value": "@item().DtConfigId",
+													"type": "Expression"
+												},
+												"EntRunId": {
+													"value": "@item().EntRunId",
+													"type": "Expression"
+												},
+												"DtRunId": {
+													"value": "@item().DtRunId",
+													"type": "Expression"
+												}
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"name": "LookupFailedStatus",
+							"description": "Search for previous transformations with NULL status that their output files were not found in previous IF condition",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "If Null Status-Failed Transformations",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderQuery": {
+										"value": "SELECT DISTINCT 1\nFROM [dbo].[DtLog]\nWHERE DtLogId IN (@{replace(coalesce(item().DtLogId,'NULL'),';',',')})\nAND (DtStatus IS NULL OR DtStatus IN('Failed','Conditions not met'))\n\n",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SQLSYN_Configuration",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": false
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "ForEachTransformationWithDependencies",
+				"description": "Evaluates the NULL status in DtLogID and go in the case that matches.",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "ForEachTransformationwithDependencies_SynapseSP",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup_Dt_Dependencies').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Lookup_Dt_DataSet_Output_Dependencies",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderStoredProcedureName": "[dbo].[sps_LookupDt_DataSet_DtOutput]",
+									"storedProcedureParameters": {
+										"DtDataSetId": {
+											"type": "String",
+											"value": {
+												"value": "@item().DtDataSetId",
+												"type": "Expression"
+											}
+										},
+										"DtConfigId": {
+											"type": "String",
+											"value": {
+												"value": "@item().DtConfigId",
+												"type": "Expression"
+											}
+										},
+										"ParentDtConfigId": {
+											"type": "Int64",
+											"value": {
+												"value": "@item().ParentDtConfigId",
+												"type": "Expression"
+											}
+										},
+										"EntRunId": {
+											"type": "String",
+											"value": {
+												"value": "@if(not(equals(item().DtLogId,NULL)),item().EntRunId,pipeline().parameters.EntRunId)",
+												"type": "Expression"
+											}
+										},
+										"DtRunId": {
+											"type": "String",
+											"value": {
+												"value": "@if(not(equals(item().DtLogId,NULL)),item().DtRunId,pipeline().RunId)",
+												"type": "Expression"
+											}
+										}
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SQLSYN_Configuration",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": false
+							}
+						},
+						{
+							"name": "DtMethod_Dependency",
+							"description": "To perform the transformation:\nFirst check the conditions of the dependency are successfully (The lookup Dt_DataSet_Output_Dependencies not empty)\nThen check for the transformations that are still with: failed status, conditions not met or null  or new transformations (NULL in their LOG information\n",
+							"type": "Switch",
+							"dependsOn": [
+								{
+									"activity": "LookupFailedStatus_Dependencies",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@if(empty(activity('Lookup_Dt_DataSet_Output_Dependencies').output.value), 'SkipTransformation', if(OR(equals(activity('LookupFailedStatus_Dependencies').output.count,1), equals(item().DtLogId,NULL)), coalesce(item().DtMethod,'DataFlow'), 'SkipTransformation'))",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "DataFlow",
+										"activities": [
+											{
+												"name": "Execute PL_11 DataTransformation_Dataflow_copy1",
+												"type": "ExecutePipeline",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "PL_11_1_DataTransformation_DataFlow",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"FunctionName": {
+															"value": "@item().FunctionName",
+															"type": "Expression"
+														},
+														"SinkPath": {
+															"value": "@item().SinkPath",
+															"type": "Expression"
+														},
+														"Output": {
+															"value": "@activity('Lookup_Dt_DataSet_Output_Dependencies').output.value",
+															"type": "Expression"
+														},
+														"DtDataSetId": {
+															"value": "@item().DtDataSetId",
+															"type": "Expression"
+														},
+														"OutputPath": {
+															"value": "@item().OutputPath",
+															"type": "Expression"
+														},
+														"PL_11_TriggerTime": {
+															"value": "@pipeline().TriggerTime",
+															"type": "Expression"
+														},
+														"LogOutputUpdateDate": {
+															"value": "@item().OutputUpdateDate",
+															"type": "Expression"
+														},
+														"DtLogId": {
+															"value": "@item().DtLogId",
+															"type": "Expression"
+														},
+														"FlagUpdateOutputDate": {
+															"value": "@item().FlagUpdateOutputDate",
+															"type": "Expression"
+														}
+													}
+												}
+											},
+											{
+												"name": "DT_DeltaLakeTable_DF_Dependencies",
+												"type": "DatabricksNotebook",
+												"dependsOn": [
+													{
+														"activity": "Execute PL_11 DataTransformation_Dataflow_copy1",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"notebookPath": "/Data Transformation/NB_Create_DeltaLake_Table",
+													"baseParameters": {
+														"SinkGlobalParameters": {
+															"value": "@string(pipeline().globalParameters.SinkGlobalParameters)",
+															"type": "Expression"
+														},
+														"DataTransformationParameters": {
+															"value": "@string(item())",
+															"type": "Expression"
+														},
+														"OutputParameters": {
+															"value": "@string(activity('Lookup_Dt_DataSet_Output_Dependencies').output.value)",
+															"type": "Expression"
+														},
+														"TriggerTime": {
+															"value": "@formatDateTime(if(equals(item().DtLogId,NULL),pipeline().TriggerTime,item().OutputUpdateDate),'yyyy-MM-dd HH:mm:ss')",
+															"type": "Expression"
+														}
+													}
+												},
+												"linkedServiceName": {
+													"referenceName": "LS_databricks",
+													"type": "LinkedServiceReference"
+												}
+											}
+										]
+									},
+									{
+										"value": "Databricks",
+										"activities": [
+											{
+												"name": "DT_Notebook_Dependencies",
+												"type": "DatabricksNotebook",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"notebookPath": {
+														"value": "@item().NotebookPath",
+														"type": "Expression"
+													},
+													"baseParameters": {
+														"SinkGlobalParameters": {
+															"value": "@string(pipeline().globalParameters.SinkGlobalParameters)",
+															"type": "Expression"
+														},
+														"DataTransformationParameters": {
+															"value": "@string(item())",
+															"type": "Expression"
+														},
+														"OutputParameters": {
+															"value": "@string(activity('Lookup_Dt_DataSet_Output_Dependencies').output.value)",
+															"type": "Expression"
+														},
+														"TriggerTime": {
+															"value": "@formatDateTime(if(equals(item().DtLogId,NULL),pipeline().TriggerTime,item().OutputUpdateDate),'yyyy-MM-dd HH:mm:ss')",
+															"type": "Expression"
+														},
+														"InputParameter": {
+															"value": "@string(item().InputParameter)",
+															"type": "Expression"
+														}
+													}
+												},
+												"linkedServiceName": {
+													"referenceName": "LS_databricks",
+													"type": "LinkedServiceReference"
+												}
+											},
+											{
+												"name": "spu_DtDsOutputUpdate_Dependencies_DataBricks",
+												"type": "SqlServerStoredProcedure",
+												"dependsOn": [
+													{
+														"activity": "DT_Notebook_Dependencies",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"storedProcedureName": "[dbo].[spu_DtDsOutputUpdate]",
+													"storedProcedureParameters": {
+														"DtDataSetId": {
+															"value": {
+																"value": "@if(equals(item().DtLogId,NULL),item().DtDataSetId,\nif(equals(split(item().FlagUpdateOutputDate,';')[0],1),item().DtDataSetId,NULL))",
+																"type": "Expression"
+															},
+															"type": "Int64"
+														},
+														"DtOutputId": {
+															"value": {
+																"value": "@if(equals(item().DtLogId,NULL), if(equals(activity('Lookup_Dt_DataSet_Output_Dependencies').output.count, 0), NULL,activity('Lookup_Dt_DataSet_Output_Dependencies').output.value[0].DtOutputId),\r\nif(equals(split(item().FlagUpdateOutputDate,';')[0],1), if(equals(activity('Lookup_Dt_DataSet_Output_Dependencies').output.count, 0), NULL, activity('Lookup_Dt_DataSet_Output_Dependencies').output.value[0].DtOutputId),NULL))",
+																"type": "Expression"
+															},
+															"type": "String"
+														},
+														"OutputUpdateDate": {
+															"value": {
+																"value": "@if(equals(item().DtLogId,NULL),pipeline().TriggerTime,\nif(equals(split(item().FlagUpdateOutputDate,';')[0],1),item().OutputUpdateDate,pipeline().TriggerTime))",
+																"type": "Expression"
+															},
+															"type": "DateTime"
+														}
+													}
+												},
+												"linkedServiceName": {
+													"referenceName": "LS_SYN",
+													"type": "LinkedServiceReference"
+												}
+											}
+										]
+									}
+								]
+							}
+						},
+						{
+							"name": "sp_UpdateDtLogSuccess_Dependencies",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "DtMethod_Dependency",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_DtLogUpdte]",
+								"storedProcedureParameters": {
+									"DtOutputId": {
+										"value": {
+											"value": "@if(OR(equals(activity('LookupFailedStatus_Dependencies').output.count,1), equals(item().DtLogId,NULL)), if(equals(activity('Lookup_Dt_DataSet_Output_Dependencies').output.count,0), item().DtDataSetId, activity('Lookup_Dt_DataSet_Output_Dependencies').output.value[0].DtOutputId), NULL)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtConfigId": {
+										"value": {
+											"value": "@item().DtConfigId",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"EntRunId": {
+										"value": {
+											"value": "@if(not(equals(item().DtLogId,NULL)),item().EntRunId,pipeline().parameters.EntRunId)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtRunId": {
+										"value": {
+											"value": "@if(not(equals(item().DtLogId,NULL)),item().DtRunId,pipeline().RunId)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtStatus": {
+										"value": {
+											"value": "@if(equals(activity('Lookup_Dt_DataSet_Output_Dependencies').output.count,0),'Conditions not met','Succeded')",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "sp_UpdateDtLogFail_Dependencies",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "DtMethod_Dependency",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_DtLogUpdte]",
+								"storedProcedureParameters": {
+									"DtOutputId": {
+										"value": {
+											"value": "@if(OR(equals(activity('LookupFailedStatus_Dependencies').output.count,1), equals(item().DtLogId,NULL)), \r\nif(equals(activity('Lookup_Dt_DataSet_Output_Dependencies').output.count, 0), NULL, activity('Lookup_Dt_DataSet_Output_Dependencies').output.value[0].DtOutputId), NULL)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtConfigId": {
+										"value": {
+											"value": "@item().DtConfigId",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"EntRunId": {
+										"value": {
+											"value": "@if(not(equals(item().DtLogId,NULL)),item().EntRunId,pipeline().parameters.EntRunId)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtRunId": {
+										"value": {
+											"value": "@if(not(equals(item().DtLogId,NULL)),item().DtRunId,pipeline().RunId)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtStatus": {
+										"value": "Failed",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "If Null Status-Failed Transformations_Dependencies",
+							"description": "Check transformation output files that previously fail (DtLogId NOT NULL) with status of NULL ",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Lookup_Dt_DataSet_Output_Dependencies",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@and(not(equals(item().DtLogId,NULL)),equals(item().DtStatus,NULL))",
+									"type": "Expression"
+								},
+								"ifTrueActivities": [
+									{
+										"name": "CheckOutputFiles_Dependencies",
+										"type": "ExecutePipeline",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"pipeline": {
+												"referenceName": "PL_11_2_DataTransformation_CheckOutputFiles",
+												"type": "PipelineReference"
+											},
+											"waitOnCompletion": true,
+											"parameters": {
+												"FileTransformationName": {
+													"value": "@activity('Lookup_Dt_DataSet_Output_Dependencies').output.value[0].FileTransformationName",
+													"type": "Expression"
+												},
+												"TransformationPathGranularity": {
+													"value": "@activity('Lookup_Dt_DataSet_Output_Dependencies').output.value[0].TransformationPathGranularity",
+													"type": "Expression"
+												},
+												"FunctionName": {
+													"value": "@item().FunctionName",
+													"type": "Expression"
+												},
+												"OutputUpdateDate": {
+													"value": "@item().OutputUpdateDate",
+													"type": "Expression"
+												},
+												"DtOutputId": {
+													"value": "@activity('Lookup_Dt_DataSet_Output_Dependencies').output.value[0].DtOutputId",
+													"type": "Expression"
+												},
+												"DtConfigId": {
+													"value": "@item().DtConfigId",
+													"type": "Expression"
+												},
+												"EntRunId": {
+													"value": "@item().EntRunId",
+													"type": "Expression"
+												},
+												"DtRunId": {
+													"value": "@item().DtRunId",
+													"type": "Expression"
+												}
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"name": "LookupFailedStatus_Dependencies",
+							"description": "Search for previous transformations with NULL status that their output files were not found in previous IF condition",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "If Null Status-Failed Transformations_Dependencies",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderQuery": {
+										"value": "SELECT DISTINCT 1\nFROM [dbo].[DtLog]\nWHERE DtLogId IN (@{replace(coalesce(item().DtLogId,'NULL'),';',',')})\nAND (DtStatus IS NULL OR DtStatus IN('Failed','Conditions not met'))",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SQLSYN_Configuration",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": false
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Lookup_Dt_Dependencies",
+				"description": "Executes the SP ‘sps_ Lookup_Dt_DataSet_Output’ to read and returned to the ADF the last EntRunId of the current execution.",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "ForEachTransformationwithNoDependencies",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[dbo].[sps_LookupDt]",
+						"storedProcedureParameters": {
+							"EntRunId": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.EntRunId",
+									"type": "Expression"
+								}
+							},
+							"TriggerName": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.TriggerName",
+									"type": "Expression"
+								}
+							},
+							"DependencyFlag": {
+								"type": "Int16",
+								"value": "1"
+							},
+							"PipelineTriggerTime": {
+								"type": "Datetime",
+								"value": {
+									"value": "@formatDateTime(pipeline().TriggerTime,'yyyy-MM-dd HH:mm:ss')",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLSYN_Configuration",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "Sp_DtLogInsert_Default",
+				"description": "Executes the SP spi_DtLogInsert_Default to insert record into DtLog table with the execution log.",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[spi_DtLogInsert_Default]",
+					"storedProcedureParameters": {
+						"DtRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"EntRunId": {
+							"value": {
+								"value": "@pipeline().parameters.EntRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"OutputUpdateDate": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"TriggerName": {
+							"value": {
+								"value": "@pipeline().parameters.TriggerName",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "InsertIntoFwkLog",
+				"description": "Executes the SP spi_FwkLogInsert to insert record into FwkLog table with the execution module information by pipeline id and with null status.",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[spi_FwkLogInsert]",
+					"storedProcedureParameters": {
+						"ModuleRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineTriggerDT": {
+							"value": {
+								"value": "@formatdatetime(pipeline().TriggerTime)",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"TriggerId": {
+							"value": {
+								"value": "@pipeline().TriggerId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"Module": {
+							"value": {
+								"value": "Data Transformation",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"StartDate": {
+							"value": {
+								"value": "@formatdatetime(pipeline().TriggerTime)",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"EntRunId": {
+							"value": {
+								"value": "@pipeline().parameters.EntRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "sp_UpdateExecutionLogS",
+				"description": "Update the status column in FwkLog table with successful status",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ForEachTransformationWithDependencies",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[spu_FwkLogUpdate]",
+					"storedProcedureParameters": {
+						"PipelineStatus": {
+							"value": {
+								"value": "Success",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ModuleRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "sp_UpdateExecutionLogF",
+				"description": "Update the status column in FwkLog table with failed statusl",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ForEachTransformationWithDependencies",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[spu_FwkLogUpdate]",
+					"storedProcedureParameters": {
+						"PipelineStatus": {
+							"value": {
+								"value": "Failed",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ModuleRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ForEachTransformationwithNoDependencies_SynapseSP",
+				"description": "Iterates over a dataset and loop by number of rows it gets with the output from ‘Lookup_Dt_NoDependencies’ activity.",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup_Dt_NoDependencies",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup_Dt_NoDependencies').output.value",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "If dtMethod equals SynapseSP",
+							"description": "Check dtMethod equals \"SynapseSP\"",
+							"type": "IfCondition",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(item().DtMethod, 'SynapseSP')",
+									"type": "Expression"
+								},
+								"ifTrueActivities": [
+									{
+										"name": "sp_FillDtUpdateSuccess_SynapseSP",
+										"description": "Update log table just for the Synapse SP that were executed with successful status",
+										"type": "SqlServerStoredProcedure",
+										"dependsOn": [
+											{
+												"activity": "Execute_CustomSynapseSP",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"storedProcedureName": "[dbo].[spu_DtLogUpdte]",
+											"storedProcedureParameters": {
+												"DtOutputId": {
+													"value": {
+														"value": "NULL",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"DtConfigId": {
+													"value": {
+														"value": "@item().DtConfigId",
+														"type": "Expression"
+													},
+													"type": "Int64"
+												},
+												"EntRunId": {
+													"value": {
+														"value": "item().EntRunId,pipeline().parameters.EntRunId",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"DtRunId": {
+													"value": {
+														"value": "item().DtRunId,pipeline().RunId",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"DtStatus": {
+													"value": "Succeded",
+													"type": "String"
+												}
+											}
+										},
+										"linkedServiceName": {
+											"referenceName": "LS_SYN",
+											"type": "LinkedServiceReference"
+										}
+									},
+									{
+										"name": "sp_UpdateDtLogFail_SynapseSP",
+										"description": "Update log table just for the Synapse SP that were executed with fail status.",
+										"type": "SqlServerStoredProcedure",
+										"dependsOn": [
+											{
+												"activity": "Execute_CustomSynapseSP",
+												"dependencyConditions": [
+													"Failed"
+												]
+											}
+										],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"storedProcedureName": "[dbo].[spu_DtLogUpdte]",
+											"storedProcedureParameters": {
+												"DtOutputId": {
+													"value": {
+														"value": "NULL",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"DtConfigId": {
+													"value": {
+														"value": "@item().DtConfigId",
+														"type": "Expression"
+													},
+													"type": "Int64"
+												},
+												"EntRunId": {
+													"value": {
+														"value": "item().EntRunId,pipeline().parameters.EntRunId",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"DtRunId": {
+													"value": {
+														"value": "item().DtRunId,pipeline().RunId",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"DtStatus": {
+													"value": "Failed",
+													"type": "String"
+												}
+											}
+										},
+										"linkedServiceName": {
+											"referenceName": "LS_SYN",
+											"type": "LinkedServiceReference"
+										}
+									},
+									{
+										"name": "Execute_CustomSynapseSP",
+										"description": "Executes custom SP setup in DtConfig table.",
+										"type": "SqlServerStoredProcedure",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"storedProcedureName": {
+												"value": "@item().FunctionName",
+												"type": "Expression"
+											}
+										},
+										"linkedServiceName": {
+											"referenceName": "LS_SYN",
+											"type": "LinkedServiceReference"
+										}
+									}
+								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "ForEachTransformationwithDependencies_SynapseSP",
+				"description": "Iterates over a dataset and loop by number of rows it gets with the output from ‘Lookup_Dt_Dependencies’ activity.",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup_Dt_Dependencies",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup_Dt_Dependencies').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "If dtMethod equals SynapseSP_Dependencies",
+							"description": "Check dtMethod equals \"SynapseSP\"",
+							"type": "IfCondition",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(item().DtMethod, 'SynapseSP')",
+									"type": "Expression"
+								},
+								"ifTrueActivities": [
+									{
+										"name": "sp_FillDtUpdateSuccess_SynapseSP_Dependencies",
+										"description": "Update log table just for the Synapse SP that were executed with successful status",
+										"type": "SqlServerStoredProcedure",
+										"dependsOn": [
+											{
+												"activity": "Execute_CustomSynapseSP_Dependencies",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"storedProcedureName": "[dbo].[spu_DtLogUpdte]",
+											"storedProcedureParameters": {
+												"DtOutputId": {
+													"value": {
+														"value": "NULL",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"DtConfigId": {
+													"value": {
+														"value": "@item().DtConfigId",
+														"type": "Expression"
+													},
+													"type": "Int64"
+												},
+												"EntRunId": {
+													"value": {
+														"value": "item().EntRunId,pipeline().parameters.EntRunId",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"DtRunId": {
+													"value": {
+														"value": "item().DtRunId,pipeline().RunId",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"DtStatus": {
+													"value": "Succeded",
+													"type": "String"
+												}
+											}
+										},
+										"linkedServiceName": {
+											"referenceName": "LS_SYN",
+											"type": "LinkedServiceReference"
+										}
+									},
+									{
+										"name": "sp_UpdateDtLogFail_SynapseSP_Dependencies",
+										"description": "Update log table just for the Synapse SP that were executed with fail status.",
+										"type": "SqlServerStoredProcedure",
+										"dependsOn": [
+											{
+												"activity": "Execute_CustomSynapseSP_Dependencies",
+												"dependencyConditions": [
+													"Failed"
+												]
+											}
+										],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"storedProcedureName": "[dbo].[spu_DtLogUpdte]",
+											"storedProcedureParameters": {
+												"DtOutputId": {
+													"value": {
+														"value": "NULL",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"DtConfigId": {
+													"value": {
+														"value": "@item().DtConfigId",
+														"type": "Expression"
+													},
+													"type": "Int64"
+												},
+												"EntRunId": {
+													"value": {
+														"value": "item().EntRunId,pipeline().parameters.EntRunId",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"DtRunId": {
+													"value": {
+														"value": "item().DtRunId,pipeline().RunId",
+														"type": "Expression"
+													},
+													"type": "String"
+												},
+												"DtStatus": {
+													"value": "Failed",
+													"type": "String"
+												}
+											}
+										},
+										"linkedServiceName": {
+											"referenceName": "LS_SYN",
+											"type": "LinkedServiceReference"
+										}
+									},
+									{
+										"name": "Execute_CustomSynapseSP_Dependencies",
+										"description": "Executes custom SP setup in DtConfig table.",
+										"type": "SqlServerStoredProcedure",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"storedProcedureName": {
+												"value": "@item().FunctionName",
+												"type": "Expression"
+											}
+										},
+										"linkedServiceName": {
+											"referenceName": "LS_SYN",
+											"type": "LinkedServiceReference"
+										}
+									}
+								]
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"EntRunId": {
+				"type": "string"
+			},
+			"TriggerName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "03 Data Transformation Module"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-07-21T08:01:45Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,45 @@
+{
+	"name": "DS_SFTP_ADLS_Sink_space",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_blobcsv",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"Container": {
+				"type": "string"
+			},
+			"Directory": {
+				"type": "string"
+			},
+			"Object": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().Object",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().Directory",
+					"type": "Expression"
+				},
+				"container": {
+					"value": "@dataset().Container",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "/",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

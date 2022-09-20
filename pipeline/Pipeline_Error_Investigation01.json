@@ -1,0 +1,64 @@
+{
+	"name": "Pipeline_Error_Investigation01",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookupSrcMaxValue",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "OracleSource",
+						"oracleReaderQuery": {
+							"value": "SELECT MAX(@{pipeline().parameters.WmkColumnName}) AS OldWatermarkValue FROM @{if(or(equals(pipeline().parameters.schema, ''), equals(pipeline().parameters.schema, null)), '' , concat(pipeline().parameters.schema, '.'))}@{pipeline().parameters.tablename}",
+							"type": "Expression"
+						},
+						"partitionOption": "None",
+						"queryTimeout": "02:00:00"
+					},
+					"dataset": {
+						"referenceName": "DS_ORACLE_Investigation2",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": {
+								"value": "@pipeline().parameters.schema",
+								"type": "Expression"
+							},
+							"tablename": {
+								"value": "@pipeline().parameters.tablename",
+								"type": "Expression"
+							}
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"schema": {
+				"type": "string"
+			},
+			"tablename": {
+				"type": "string",
+				"defaultValue": "TAMS_WRK_SALE_COMP_MIS"
+			},
+			"WmkColumnName": {
+				"type": "string",
+				"defaultValue": "1"
+			}
+		},
+		"folder": {
+			"name": "ProjTeam_POC"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-08-25T07:39:48Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

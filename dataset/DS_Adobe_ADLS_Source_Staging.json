@@ -1,0 +1,35 @@
+{
+	"name": "DS_Adobe_ADLS_Source_Staging",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_blobcsv",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"SrcPath": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "BurtTest"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().SrcPath",
+					"type": "Expression"
+				},
+				"container": "test"
+			},
+			"columnDelimiter": "\t",
+			"encodingName": "UTF-8",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

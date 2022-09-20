@@ -1,0 +1,76 @@
+{
+	"name": "02_getCsvFiles2ADLS_add_schema_Poc",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1_copy1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"value": "@json('{\n        \"type\": \"TabularTranslator\",\n        \"mappings\": [\n            {\n                \"source\": {\n                    \"type\": \"String\",\n                    \"ordinal\": 1\n                },\n                \"sink\": {\n                    \"name\": \"event_id\"\n                }\n            },\n            {\n                \"source\": {\n                    \"type\": \"String\",\n                    \"ordinal\": 2\n                },\n                \"sink\": {\n                    \"name\": \"event_name\"\n                }\n            }\n        ]\n\t\t}')",
+						"type": "Expression"
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_Adobe_ADLS_Source_Staging",
+						"type": "DatasetReference",
+						"parameters": {
+							"SrcPath": {
+								"value": "@pipeline().parameters.SrcPath",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADOBE_ADLS_SINK",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"parameters": {
+			"SrcPath": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "BurtTest/CopySFTP"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-09-01T09:43:16Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

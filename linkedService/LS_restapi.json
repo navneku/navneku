@@ -1,0 +1,35 @@
+{
+	"name": "LS_restapi",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"parameters": {
+			"InstanceURL": {
+				"type": "object"
+			},
+			"UserName": {
+				"type": "object"
+			},
+			"SecretName": {
+				"type": "object"
+			}
+		},
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "@linkedService().InstanceURL",
+			"authenticationType": "Basic",
+			"userName": "@linkedService().UserName",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "LS_keyvault",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": {
+					"value": "@linkedService().SecretName",
+					"type": "Expression"
+				}
+			}
+		}
+	}
+}

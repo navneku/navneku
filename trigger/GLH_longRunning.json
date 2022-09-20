@@ -1,0 +1,25 @@
+{
+	"name": "GLH_longRunning",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 1,
+				"startTime": "2022-09-16T18:46:00",
+				"endTime": "2022-09-16T19:00:00",
+				"timeZone": "China Standard Time"
+			}
+		}
+	}
+}

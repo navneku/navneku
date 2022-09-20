@@ -1,0 +1,37 @@
+{
+	"name": "Exec_SynapseSP_External Table",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute_CustomSynapseSP",
+				"description": "Executes custom SP setup in DtConfig table.",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": {
+						"value": "[dbo].[SP_ProjTeam_POC]",
+						"type": "Expression"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"folder": {
+			"name": "ProjTeam_POC"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-07-06T05:27:04Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

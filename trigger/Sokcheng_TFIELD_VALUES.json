@@ -1,0 +1,25 @@
+{
+	"name": "Sokcheng_TFIELD_VALUES",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 10,
+				"startTime": "2022-08-16T14:40:00",
+				"endTime": "2022-08-16T15:00:00",
+				"timeZone": "SE Asia Standard time"
+			}
+		}
+	}
+}

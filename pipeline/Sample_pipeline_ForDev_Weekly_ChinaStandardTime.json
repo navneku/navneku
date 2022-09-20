@@ -1,0 +1,462 @@
+{
+	"name": "Sample_pipeline_ForDev_Weekly_ChinaStandardTime",
+	"properties": {
+		"activities": [
+			{
+				"name": "EDL_to_ADLSGen2",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Delete_ADLSGen2_Last_WeekData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "OdbcSource",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ODBC",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.edl_sch_name",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.edl_tbl_name",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": "jugaad",
+							"dir_name": {
+								"value": "@concat('dev/raw/KH/Full/',pipeline().parameters.system_name,'/',pipeline().parameters.adlsg2_file_name,'/',variables('Year'),'/',variables('Month'),'/',variables('Day'))",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@concat(pipeline().parameters.system_name,'_',pipeline().parameters.adlsg2_file_name,'_',variables('Year'),'_',variables('Month'),'_',variables('Day'))",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Delete_ADLSGen2_Last_WeekData",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "Set Month",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set Year",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set Day",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set LastWeek_Year",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set LastWeek_Month",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set LastWeek_Day",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": "jugaad",
+							"dir_name": {
+								"value": "@concat('dev/raw/KH/Full/',pipeline().parameters.system_name,'/',pipeline().parameters.adlsg2_file_name,'/',variables('Last_Week_Year'),'/',variables('Last_Week_Month'),'/',variables('Last_Week_Day'))",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@variables('file_name_for_delete_activity')",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "ADLSGen2_to_Synapse",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Truncate_Table_Synapse",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "SqlDWSink"
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "sample_table.float_col",
+									"type": "Double",
+									"physicalType": "DOUBLE"
+								},
+								"sink": {
+									"name": "float_col",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 20,
+									"precision": 22
+								}
+							},
+							{
+								"source": {
+									"name": "sample_table.int_col",
+									"type": "Int64",
+									"physicalType": "INT64"
+								},
+								"sink": {
+									"name": "int_col",
+									"type": "Int32",
+									"physicalType": "int"
+								}
+							},
+							{
+								"source": {
+									"name": "sample_table.date_col",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "date_col",
+									"type": "DateTime",
+									"physicalType": "datetime"
+								}
+							},
+							{
+								"source": {
+									"name": "sample_table.string_col",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "string_col",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": "jugaad",
+							"dir_name": {
+								"value": "@concat('dev/raw/KH/Full/',pipeline().parameters.system_name,'/',pipeline().parameters.adlsg2_file_name,'/',variables('Year'),'/',variables('Month'),'/',variables('Day'))",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@concat(pipeline().parameters.system_name,'_',pipeline().parameters.adlsg2_file_name,'_',variables('Year'),'_',variables('Month'),'_',variables('Day'))",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.synapse_sch_name",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.synapse_tbl_name",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Truncate_Table_Synapse",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "EDL_to_ADLSGen2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderQuery": {
+							"value": "@concat('truncate table ', pipeline().parameters.synapse_sch_name,'.',pipeline().parameters.synapse_tbl_name,';','select 0 id;')",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.synapse_sch_name",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.synapse_tbl_name",
+								"type": "Expression"
+							}
+						}
+					}
+				}
+			},
+			{
+				"name": "Set Year",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Year",
+					"value": {
+						"value": "@formatDateTime(convertFromUtc(utcnow(), 'China Standard Time'),'yyyy')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set Month",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Month",
+					"value": {
+						"value": "@formatDateTime(convertFromUtc(utcnow(), 'China Standard Time'),'MM')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set Day",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Day",
+					"value": {
+						"value": "@formatDateTime(convertFromUtc(utcnow(), 'China Standard Time'),'dd')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set LastWeek_Year",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Last_Week_Year",
+					"value": {
+						"value": "@formatDateTime(adddays(convertFromUtc(utcnow(), 'China Standard Time'),-7),'yyyy')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set LastWeek_Month",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Last_Week_Month",
+					"value": {
+						"value": "@formatDateTime(adddays(convertFromUtc(utcnow(), 'China Standard Time'),-7),'MM')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Set LastWeek_Day",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "Last_Week_Day",
+					"value": {
+						"value": "@formatDateTime(adddays(convertFromUtc(utcnow(), 'China Standard Time'),-7),'dd')",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"edl_sch_name": {
+				"type": "string",
+				"defaultValue": "kh_lab_project_test_db"
+			},
+			"edl_tbl_name": {
+				"type": "string",
+				"defaultValue": "sample_table"
+			},
+			"adlsg2_file_name": {
+				"type": "string",
+				"defaultValue": "SampleData"
+			},
+			"system_name": {
+				"type": "string",
+				"defaultValue": "CAS"
+			},
+			"synapse_sch_name": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"synapse_tbl_name": {
+				"type": "string",
+				"defaultValue": "sample_table"
+			}
+		},
+		"variables": {
+			"Year": {
+				"type": "String"
+			},
+			"Month": {
+				"type": "String"
+			},
+			"Day": {
+				"type": "String"
+			},
+			"Last_Week_Year": {
+				"type": "String"
+			},
+			"Last_Week_Month": {
+				"type": "String"
+			},
+			"Last_Week_Day": {
+				"type": "String"
+			},
+			"file_name_for_delete_activity": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Non-Prod testing and POC only"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-11-15T09:51:32Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

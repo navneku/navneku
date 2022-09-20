@@ -1,0 +1,198 @@
+{
+	"name": "pipeline6",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "OracleSource",
+						"partitionOption": "None",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "RUN_NUM",
+									"type": "String"
+								},
+								"sink": {
+									"name": "RUN_NUM",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "POL_NUM",
+									"type": "String"
+								},
+								"sink": {
+									"name": "POL_NUM",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "AGT_CODE",
+									"type": "String"
+								},
+								"sink": {
+									"name": "AGT_CODE",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "MODE_PREM",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "MODE_PREM",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								}
+							},
+							{
+								"source": {
+									"name": "DSCNT_PREM",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "DSCNT_PREM",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								}
+							},
+							{
+								"source": {
+									"name": "PMT_MODE",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PMT_MODE",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "APE",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "APE",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								}
+							},
+							{
+								"source": {
+									"name": "SBMT_DT",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "SBMT_DT",
+									"type": "DateTime",
+									"physicalType": "INT_96"
+								}
+							},
+							{
+								"source": {
+									"name": "POL_EFF_DT",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "POL_EFF_DT",
+									"type": "DateTime",
+									"physicalType": "INT_96"
+								}
+							},
+							{
+								"source": {
+									"name": "POL_ISS_DT",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "POL_ISS_DT",
+									"type": "DateTime",
+									"physicalType": "INT_96"
+								}
+							},
+							{
+								"source": {
+									"name": "POL_STAT_CD",
+									"type": "String"
+								},
+								"sink": {
+									"name": "POL_STAT_CD",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "POL_TRMN_DT",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "POL_TRMN_DT",
+									"type": "DateTime",
+									"physicalType": "INT_96"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ORACLE_Invstgatn_RJS",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": "CAS",
+							"tablename": "TKH_POLICY_BK"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_Demo_RJS",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-09-14T03:36:18Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

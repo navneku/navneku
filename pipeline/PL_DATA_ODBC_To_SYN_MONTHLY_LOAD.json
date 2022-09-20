@@ -1,0 +1,261 @@
+{
+	"name": "PL_DATA_ODBC_To_SYN_MONTHLY_LOAD",
+	"properties": {
+		"activities": [
+			{
+				"name": "PL_DATA_tams_agents_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tams_agents_To_DS_SYN_tams_agents_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tams_dist_chnl_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tams_dist_chnl_To_DS_SYN_tams_dist_chnl_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tais_if02_xml_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tais_if02_xml_To_DS_SYN_tais_if02_xml_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tais_uw_data_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tais_uw_data_To_DS_SYN_tais_uw_data_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tcash_batch_details_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tcash_batch_details_To_DS_SYN_tcash_batch_details_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tcash_batch_headers_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tcash_batch_headers_To_DS_SYN_tcash_batch_headers_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tclaim_details_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tclaim_details_To_DS_SYN_tclaim_details_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tclient_addresses_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tclient_addresses_To_DS_SYN_tclient_addresses_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tclient_details_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tclient_details_To_DS_SYN_tclient_details_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tclient_other_details_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tclient_other_details_To_DS_SYN_tclient_other_details_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tclient_policy_links_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tclient_policy_links_To_DS_SYN_tclient_policy_links_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tcoverages_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tcoverages_To_DS_SYN_tcoverages_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tfield_values_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tfield_values_To_DS_SYN_tfield_values_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tfranchise_addresses_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tfranchise_addresses_To_DS_SYN_tfranchise_addresses_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_toccupation_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_toccupation_To_DS_SYN_toccupation_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tplans_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tplans_To_DS_SYN_tplans_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_tpolicys_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_tpolicys_To_DS_SYN_tpolicys_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_ttrxn_histories_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_ttrxn_histories_To_DS_SYN_ttrxn_histories_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "PL_DATA_ttrxn_logs_MONTHLY",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_DATA_DS_ODBC_ttrxn_logs_To_DS_SYN_ttrxn_logs_monthly",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"concurrency": 5,
+		"folder": {
+			"name": "E2E-Pipeline-Monthly-Load"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-11-26T09:08:37Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

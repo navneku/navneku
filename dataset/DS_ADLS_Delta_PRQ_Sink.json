@@ -1,0 +1,35 @@
+{
+	"name": "DS_ADLS_Delta_PRQ_Sink",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_adls_sink",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FullPath": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ProjTeam"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().FullPath",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "dev",
+					"type": "Expression"
+				}
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

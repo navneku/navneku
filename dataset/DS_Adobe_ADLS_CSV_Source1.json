@@ -1,0 +1,53 @@
+{
+	"name": "DS_Adobe_ADLS_CSV_Source1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_blobcsv",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"Container": {
+				"type": "string"
+			},
+			"Directory": {
+				"type": "string"
+			},
+			"Object": {
+				"type": "string"
+			},
+			"ColDelimiter": {
+				"type": "string"
+			},
+			"RowDelimiter": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "01 Ingestion Module DS"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().Object",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().Directory",
+					"type": "Expression"
+				},
+				"container": {
+					"value": "@dataset().Container",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": "\t",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

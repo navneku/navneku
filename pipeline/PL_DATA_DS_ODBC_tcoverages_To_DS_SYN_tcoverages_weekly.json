@@ -1,0 +1,1798 @@
+{
+	"name": "PL_DATA_DS_ODBC_tcoverages_To_DS_SYN_tcoverages_weekly",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_DATA_DS_ODBC_tcoverages_To_DS_ADLS_tcoverages",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_DELETEFILE_ADLS_tcoverages",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "OdbcSource",
+						"additionalColumns": [
+							{
+								"name": "Timestamp",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							}
+						],
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"parallelCopies": 4,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ODBC",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.edl_sch_name",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.edl_tbl_name",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": {
+								"value": "@activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_container",
+								"type": "Expression"
+							},
+							"dir_name": {
+								"value": "@concat(toLower(activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.env),activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_value,pipeline().parameters.system_name,'/',pipeline().parameters.adlsg2_file_name,'/',String(formatDateTime(utcnow(),'yyyy')),'/',String(formatDateTime(utcnow(),'MM')),'/',String(formatDateTime(utcnow(),'dd')))",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@concat(pipeline().parameters.system_name,'_',pipeline().parameters.adlsg2_file_name,'_',String(formatDateTime(utcnow(),'yyyy')),'_',String(formatDateTime(utcnow(),'MM')),'_',String(formatDateTime(utcnow(),'dd')),'_',pipeline().parameters.load_frequency)",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "ACT_CUSTOM_DELETEFILE_ADLS_tcoverages",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_EXEC_GET_CONFIG_SETTING",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": {
+								"value": "@activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_container",
+								"type": "Expression"
+							},
+							"dir_name": {
+								"value": "@concat(toLower(activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.env),activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_value,pipeline().parameters.system_name,'/',pipeline().parameters.adlsg2_file_name,'/',String(formatDateTime(adddays(utcnow(),-7),'yyyy')),'/',String(formatDateTime(adddays(utcnow(),-7),'MM')),'/',String(formatDateTime(adddays(utcnow(),-7),'dd')))",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@concat(pipeline().parameters.system_name,'_',pipeline().parameters.adlsg2_file_name,'_',String(formatDateTime(adddays(utcnow(),-7),'yyyy')),'_',String(formatDateTime(adddays(utcnow(),-7),'MM')),'_',String(formatDateTime(adddays(utcnow(),-7),'dd')),'_',pipeline().parameters.load_frequency)",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": false,
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "ACT_DATA_DS_ADLS_tcoverages_To_DS_SYN_tcoverages",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_EXEC_TRUNCATE_tcoverages_weekly",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "SqlDWSink"
+					},
+					"enableStaging": false,
+					"parallelCopies": 4,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "tcoverages.band_face_amt",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "BAND_FACE_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.face_ratg",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "FACE_RATG",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 5
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.ins_typ",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "INS_TYP",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.cvg_eff_age",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "CVG_EFF_AGE",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.cvg_iss_dt",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "CVG_ISS_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.xpry_dt",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "XPRY_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.nyr_cvg_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "NYR_CVG_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.nyr_dscnt_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "NYR_DSCNT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.pua_crnt_amt",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "PUA_CRNT_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.prem_vers",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "PREM_VERS",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.pol_val_vers",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "POL_VAL_VERS",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.prem_ovrid_end_date",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "PREM_OVRID_END_DATE",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.div_crnt_amt",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "DIV_CRNT_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.joint_cli_num",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "JOINT_CLI_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.joint_rel_insrd",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "JOINT_REL_INSRD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.temp_flat_dur",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "TEMP_FLAT_DUR",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.temp_flat_unit_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "TEMP_FLAT_UNIT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 3,
+									"precision": 7
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.temp_flat_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "TEMP_FLAT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.perm_flat_unit_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "PERM_FLAT_UNIT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 3,
+									"precision": 7
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.xtra_cat_cd",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "XTRA_CAT_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.perm_mort_ratg",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "PERM_MORT_RATG",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 5
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.temp_mort_ratg",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "TEMP_MORT_RATG",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 5
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.cvg_del_dt",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "CVG_DEL_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.adj_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "ADJ_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.adj_start_dt",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "ADJ_START_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.adj_end_dt",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "ADJ_END_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.nxt_eff_cvg_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "NXT_EFF_CVG_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.nxt_eff_dscnt_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "NXT_EFF_DSCNT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.ctr_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "CTR_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.nxt_eff_ctr_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "NXT_EFF_CTR_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.prev_dth_bnft_amt",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "PREV_DTH_BNFT_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.risk_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "RISK_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.init_chg_ind",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "INIT_CHG_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.ipo_pct",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "IPO_PCT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 5
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.comm_vers",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "COMM_VERS",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.cvg_clas",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "CVG_CLAS",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.dscnt_pct",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "DSCNT_PCT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 5
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.dscnt_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "DSCNT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.dth_bnft_amt",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "DTH_BNFT_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.face_amt",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "FACE_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.adj_prem_pct",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "ADJ_PREM_PCT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 5
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.cntr_price",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "CNTR_PRICE",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.int_rt",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "INT_RT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 3,
+									"precision": 5
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.nyr_wp_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "NYR_WP_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.wp_eff_age",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "WP_EFF_AGE",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.wp_eff_dt",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "WP_EFF_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.wp_option",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "WP_OPTION",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.wp_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "WP_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.wp_prem_age_basis",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "WP_PREM_AGE_BASIS",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.wp_prem_vers",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "WP_PREM_VERS",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.orig_face_amt",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "ORIG_FACE_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.orig_death_bnft",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "ORIG_DEATH_BNFT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.orig_pua_amt",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "ORIG_PUA_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.joint_cli_eff_age",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "JOINT_CLI_EFF_AGE",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.substd_cd",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "SUBSTD_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.endow_acru",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "ENDOW_ACRU",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.nb_seq",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "NB_SEQ",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 5
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.no_of_insrd",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "NO_OF_INSRD",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 2
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.rcc_ind",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "RCC_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.cvg_del_reasn",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "CVG_DEL_REASN",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.lien_pct",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "LIEN_PCT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 5
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.pol_num",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "POL_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.cli_num",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "CLI_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.plan_code",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "PLAN_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.vers_num",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "VERS_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.cvg_eff_dt",
+									"type": "DateTime",
+									"physicalType": "INT96"
+								},
+								"sink": {
+									"name": "CVG_EFF_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.cvg_typ",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "CVG_TYP",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.cvg_reasn",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "CVG_REASN",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.occp_clas",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "OCCP_CLAS",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.par_code",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "PAR_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.bnft_dur",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "BNFT_DUR",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.prem_dur",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "PREM_DUR",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.pua_tot_amt",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "PUA_TOT_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.rel_to_insrd",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "REL_TO_INSRD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.smkr_code",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "SMKR_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.sex_code",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "SEX_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.cvg_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "CVG_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.cvg_stat_cd",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "CVG_STAT_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.comm_ctl",
+									"type": "String",
+									"physicalType": "UTF8"
+								},
+								"sink": {
+									"name": "COMM_CTL",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.perm_flat_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "PERM_FLAT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.temp_mort_dur",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "TEMP_MORT_DUR",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.temp_mort_unit_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "TEMP_MORT_UNIT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 3,
+									"precision": 7
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.temp_mort_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "TEMP_MORT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.perm_mort_unit_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "PERM_MORT_UNIT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 3,
+									"precision": 7
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.perm_mort_prem",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "PERM_MORT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tcoverages.eti_endow",
+									"type": "Decimal",
+									"physicalType": "DECIMAL"
+								},
+								"sink": {
+									"name": "ETI_ENDOW",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "Timestamp"
+								},
+								"sink": {
+									"name": "Timestamp",
+									"type": "DateTime",
+									"physicalType": "datetime"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": {
+								"value": "@activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_container",
+								"type": "Expression"
+							},
+							"dir_name": {
+								"value": "@concat(toLower(activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.env),activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_value,pipeline().parameters.system_name,'/',pipeline().parameters.adlsg2_file_name,'/',String(formatDateTime(utcnow(),'yyyy')),'/',String(formatDateTime(utcnow(),'MM')),'/',String(formatDateTime(utcnow(),'dd')))",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@concat(pipeline().parameters.system_name,'_',pipeline().parameters.adlsg2_file_name,'_',String(formatDateTime(utcnow(),'yyyy')),'_',String(formatDateTime(utcnow(),'MM')),'_',String(formatDateTime(utcnow(),'dd')),'_',pipeline().parameters.load_frequency)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.synapse_sch_name",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.synapse_tbl_name",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "ACT_CUSTOM_EXEC_TRUNCATE_tcoverages_weekly",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "ACT_DATA_DS_ODBC_tcoverages_To_DS_ADLS_tcoverages",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderQuery": {
+							"value": "@concat('truncate table ', pipeline().parameters.synapse_sch_name,'.',pipeline().parameters.synapse_tbl_name,';','select 0 id;')",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.synapse_sch_name",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.synapse_tbl_name",
+								"type": "Expression"
+							}
+						}
+					}
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_COPY1_ERROR_LOG",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_DATA_DS_ODBC_tcoverages_To_DS_ADLS_tcoverages",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_DATA_DS_ODBC_tcoverages_To_DS_ADLS_tcoverages",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_DATA_DS_ODBC_tcoverages_To_DS_ADLS_tcoverages').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Copy data",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_DATA_DS_ODBC_tcoverages_To_DS_ADLS_tcoverages').output.errors[0].Code",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_DATA_DS_ODBC_tcoverages_To_DS_ADLS_tcoverages').output.errors[0].Message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_COPY2_ERROR_LOG",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_DATA_DS_ADLS_tcoverages_To_DS_SYN_tcoverages",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_DATA_DS_ADLS_tcoverages_To_DS_SYN_tcoverages",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_DATA_DS_ADLS_tcoverages_To_DS_SYN_tcoverages').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Copy data",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_DATA_DS_ADLS_tcoverages_To_DS_SYN_tcoverages').output.errors[0].Code",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_DATA_DS_ADLS_tcoverages_To_DS_SYN_tcoverages').output.errors[0].Message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_TRUNCATE_ERROR_LOG",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_EXEC_TRUNCATE_tcoverages_weekly",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_CUSTOM_EXEC_TRUNCATE_tcoverages_weekly",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_EXEC_TRUNCATE_tcoverages_weekly').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Lookup",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_EXEC_TRUNCATE_tcoverages_weekly').error.errorcode",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_EXEC_TRUNCATE_tcoverages_weekly').error.message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_DELETION_ERROR_LOG",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_DELETEFILE_ADLS_tcoverages",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_CUSTOM_DELETEFILE_ADLS_tcoverages",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_DELETEFILE_ADLS_tcoverages').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Delete",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_DELETEFILE_ADLS_tcoverages').error.errorcode",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_DELETEFILE_ADLS_tcoverages').error.message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_EXEC_GET_CONFIG_SETTING",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[config].[sp_get_configsetting]",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.synapse_sch_name",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.synapse_tbl_name",
+								"type": "Expression"
+							}
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"edl_sch_name": {
+				"type": "string",
+				"defaultValue": "kh_dev_published_src_cas_db"
+			},
+			"edl_tbl_name": {
+				"type": "string",
+				"defaultValue": "tcoverages"
+			},
+			"adlsg2_file_name": {
+				"type": "string",
+				"defaultValue": "tcoverages"
+			},
+			"system_name": {
+				"type": "string",
+				"defaultValue": "CAS"
+			},
+			"synapse_sch_name": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"synapse_tbl_name": {
+				"type": "string",
+				"defaultValue": "tcoverages_weekly"
+			},
+			"load_frequency": {
+				"type": "string",
+				"defaultValue": "weekly"
+			}
+		},
+		"folder": {
+			"name": "E2E-Pipeline-Weekly-Load/CAS"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-11-26T09:08:25Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

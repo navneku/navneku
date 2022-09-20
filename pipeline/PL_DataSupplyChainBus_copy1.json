@@ -1,0 +1,66 @@
+{
+	"name": "PL_DataSupplyChainBus_copy1",
+	"properties": {
+		"description": "Controls the data flow.",
+		"activities": [
+			{
+				"name": "Execute Ingestion Module",
+				"description": "This pipeline is used to execute all the inner activities that are included in the ingestion module.",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_12_GetBatches",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"EntRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"TriggerName": {
+							"value": "@pipeline().TriggerName",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Execute Data Transformation Module",
+				"description": "This pipeline is used to execute all the inner activities that are included in the data validation module.",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute Ingestion Module",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_11_DataTransformation",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"EntRunId": {
+							"value": "@pipeline().RunId",
+							"type": "Expression"
+						},
+						"TriggerName": {
+							"value": "@pipeline().TriggerName",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-07-19T19:44:03Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

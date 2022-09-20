@@ -1,0 +1,21 @@
+{
+	"name": "DS_Adobe_Sftp",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_FtpServer_Poc",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "BurtTest"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "SftpLocation",
+				"folderPath": "/home/sqoop/adobe/ph_adobe_allsites"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

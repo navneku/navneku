@@ -1,0 +1,33 @@
+{
+	"name": "DS_SYN",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SYN",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"sch_name": {
+				"type": "string",
+				"defaultValue": "sch_name"
+			},
+			"tbl_name": {
+				"type": "string",
+				"defaultValue": "tbl_name"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().sch_name",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().tbl_name",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,25 @@
+{
+	"name": "ProjTeam-TEST",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Hour",
+				"interval": 1,
+				"startTime": "2022-05-25T13:25:00",
+				"endTime": "2022-05-25T14:25:00",
+				"timeZone": "SE Asia Standard Time"
+			}
+		}
+	}
+}
