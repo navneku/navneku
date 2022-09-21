@@ -9,6 +9,9 @@ mount_container(wandisco_container_name)
 # COMMAND ----------
 
 #Get all the part file folder inside table folder
+#Get all the part file folder inside table folder
+#changed by navneet
+
 table_path ='/kh/ldmnonprod/published/hive/kh_dev_published_src_ams_db/MVAMS_AGT_RECRUIT_RELS'
 #Get metadata of file in ADLS gen2
 ddlSchema = StructType([
