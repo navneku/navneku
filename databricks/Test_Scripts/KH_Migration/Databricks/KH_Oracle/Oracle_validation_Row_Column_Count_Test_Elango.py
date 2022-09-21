@@ -1,0 +1,120 @@
+# Databricks notebook source
+# MAGIC %run ../02_Utilities
+
+# COMMAND ----------
+
+inputv = [{"FwkSourceId":13,"SourceType":"Oracle","FwkConfigId":10,"SrcObject":"TFRANCHISE_ADDRESSES","SchemaName":"CAS","DatabaseName":"KHCASREG","WmkColumnName":"1","WmkDataType":1,"TypeLoad":1,"RelativeURL":"null","ActiveFlag":"Y","Header01":"null","Header02":"null","InstanceURL":"null","Port":"null","UserName":"null","SecretName":"null","SrcPath":"null","SinkPathGranularity":"HH","IPAddress":"null","FwkTriggerId":24,"BatchGroupId":-1,"ConvertMethod":"Databricks","SynapseObject":"null","EnvironmentName":"dev","CountryId":"KH","SystemName":"Oracle","TimezoneName":"SE Asia Standard Time","MaxConcurrency":50,"BlockSize":100,"DegreeOfParallelism":20},{"FwkSourceId":13,"SourceType":"Oracle","FwkConfigId":600393,"SrcObject":"TLOAN_DETAILS","SchemaName":"CAS","DatabaseName":"KHCASREG","WmkColumnName":"1","WmkDataType":1,"TypeLoad":1,"RelativeURL":"null","ActiveFlag":"Y","Header01":"null","Header02":"null","InstanceURL":"null","Port":"null","UserName":"null","SecretName":"null","SrcPath":"null","SinkPathGranularity":"DD","IPAddress":"null","FwkTriggerId":24,"BatchGroupId":-1,"ConvertMethod":"Databricks","SynapseObject":"null","EnvironmentName":"dev","CountryId":"KH","SystemName":"Oracle","TimezoneName":"SE Asia Standard Time","MaxConcurrency":50,"BlockSize":100,"DegreeOfParallelism":20}]
+
+# COMMAND ----------
+
+# DBTITLE 1,Pass the parameters value here:
+import time
+tbl_list =['CAS.ACT_SCH',
+'CAS.CONV_HCP',
+'CAS.CONV_HOSPITAL',
+'CAS.CONV_MCLM',
+'CAS.CONV_PROLADY',
+'CAS.DIRECTORIES',
+'CAS.TFRANCHISE_ADDRESSES']
+
+container = 'dev'
+file_format = 'parquet'
+#add all the tbl paths here (comma separated values)
+File_path_list =['/Published/KH/Master/CAS/ACT_SCH/',
+'/Published/KH/Master/CAS/CONV_HCP/',
+'/Published/KH/Master/CAS/CONV_HOSPITAL/',
+'/Published/KH/Master/CAS/CONV_MCLM/',
+'/Published/KH/Master/CAS/CONV_PROLADY/',
+'/Published/KH/Master/CAS/DIRECTORIES/',
+'/Published/KH/Master/CAS/TFRANCHISE_ADDRESSES/']
+
+mount_container(container)
+mnt_path = dbfs_mount_path+container
+
+# COMMAND ----------
+
+# inputv is the params from ADF which is from FwkConfig table 
+rdd =  spark.sparkContext.parallelize([inputv])
+input_df = spark.read.json(rdd)
+input_df_oralce = input_df.filter(input_df.SourceType == 'Oracle')
+tbl_schema_list = input_df_oralce.select('SchemaName').rdd.flatMap(lambda x:x).collect()
+tbl_name_list = input_df_oralce.select('SrcObject').rdd.flatMap(lambda x:x).collect()
+print(tbl_schema_list)
+print(tbl_name_list)
+
+#Read Oralce data
+ddlSchema = StructType([
+StructField('tblnm',StringType()),
+StructField('columncount',StringType()),
+StructField('rowcount',IntegerType())])
+df_final_oracle = spark.createDataFrame([],ddlSchema)
+row_cnt_qry="select count(*) from tablePlaceHolder"
+column_cnt_query="select * from tablePlaceHolder limit 1"
+for tb_sch_nm,tbl in zip(tbl_schema_list,tbl_name_list):
+    qry = f'select * from {tb_sch_nm}.{tbl}'
+    tblnm = tbl
+    df = spark.read \
+    .format("jdbc") \
+    .option("url", oracle_url) \
+    .option("query",qry)\
+    .option("user", oracle_username) \
+    .option("password", oracle_password) \
+    .option("driver", "oracle.jdbc.driver.OracleDriver") \
+    .load()
+    #rowcount =df.count()
+    #columncount=len(df.columns)
+    df.createOrReplaceTempView("tablePlaceHolder")
+    df3=spark.sql(column_cnt_query)
+    columncount=len(df3.columns)
+    df4=spark.sql(row_cnt_qry)
+    rowcount=df4.head()[0]
+    df = df.select(f.lit(tblnm).alias("tblnm"),f.lit(columncount).alias("columncount"),f.lit(rowcount).alias("rowcount")).distinct()
+    df_final_oracle = df_final_oracle.union(df)
+
+df_final_oracle = (
+df_final_oracle
+    .withColumnRenamed("tblnm","tblnm_oracle")
+    .withColumnRenamed("columncount","columncount_oracle")
+    .withColumnRenamed("rowcount","rowcount_oracle")
+)
+display(df_final_oracle)
+
+#print(inputv)
+
+# COMMAND ----------
+
+#Read ADLSgen2 data
+container = 'dev'
+file_format = PARQUET_FORMAT
+mount_container(container)
+mnt_path = dbfs_mount_path+container
+
+df_final_adls = spark.createDataFrame([],ddlSchema)
+for tbl in tbl_name_list:
+    tblnm= tbl
+    file_path = f'/Published/KH/Master/Oracle/{tbl}'
+    #print(tblnm)
+    df = load_adls_df(file_path,file_format)
+    rowcount =df.count()
+    columncount=len(df.columns)
+    df = df.select(f.lit(tblnm).alias("tblnm"),f.lit(columncount).alias("columncount"),f.lit(rowcount).alias("rowcount")).distinct()
+    df_final_adls = df_final_adls.union(df)
+
+display(df_final_adls)
+
+# COMMAND ----------
+
+df_final_oracle = df_final_oracle.withColumn('tblnm_oracle',f.expr("substring_index(tblnm_oracle,'.',-1)"))
+result_df = df_final_adls.join(df_final_oracle,df_final_adls.tblnm==df_final_oracle.tblnm_oracle,"left")
+result_df = result_df.withColumn('ComparisonResult',\
+f.when((f.col("rowcount")==f.col("rowcount_oracle")) & (f.col("columncount")-2==f.col("columncount_oracle")),"Both matched")\
+.when((f.col("rowcount")!=f.col("rowcount_oracle")) & (f.col("columncount")-2==f.col("columncount_oracle")),"Row count not match")\
+.when((f.col("rowcount")==f.col("rowcount_oracle")) & (f.col("columncount")-2!=f.col("columncount_oracle")),"Column count not match")\
+.otherwise("Both not match"))
+display(result_df)
+
+#columncount from adls will be greater than columncount_oralce for 2 since the LastUpdate & Createdby column will generated on the fly therefore -2 for columncount is added to the code
+
+# COMMAND ----------
+
+
