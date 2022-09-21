@@ -1,0 +1,51 @@
+{
+	"name": "DS_FS_Source_DF",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_fileserver",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"InstanceURL": {
+					"value": "@dataset().FwkItem['InstanceURL']",
+					"type": "Expression"
+				},
+				"UserName": {
+					"value": "@dataset().FwkItem['UserName']",
+					"type": "Expression"
+				},
+				"SecretName": {
+					"value": "@dataset().FwkItem['SecretName']",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"FwkItem": {
+				"type": "array"
+			},
+			"flag": {
+				"type": "int"
+			}
+		},
+		"folder": {
+			"name": "02 Data Validation Module DS"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "FileServerLocation",
+				"folderPath": {
+					"value": "@dataset().FwkItem['SourcePath']",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

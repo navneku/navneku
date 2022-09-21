@@ -1,0 +1,39 @@
+{
+	"name": "DS_ADLS_Binary_Folder_Sink",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_adls_sink",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FwkItem": {
+				"type": "array"
+			},
+			"pipelineTriggerTime": {
+				"type": "string"
+			},
+			"FolderPath": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "01 Ingestion Module DS"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "@dataset().FolderPath",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "sink",
+					"type": "Expression"
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

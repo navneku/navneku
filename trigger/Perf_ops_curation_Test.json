@@ -1,0 +1,25 @@
+{
+	"name": "Perf_ops_curation_Test",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-09-07T21:33:00",
+				"endTime": "2022-09-07T23:50:00",
+				"timeZone": "China Standard Time"
+			}
+		}
+	}
+}

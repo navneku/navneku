@@ -1,0 +1,25 @@
+{
+	"name": "ProjectTeam",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Hour",
+				"interval": 1,
+				"startTime": "2022-09-06T15:14:00",
+				"endTime": "2022-09-06T15:59:00",
+				"timeZone": "China Standard Time"
+			}
+		}
+	}
+}

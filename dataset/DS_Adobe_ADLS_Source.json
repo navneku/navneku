@@ -1,0 +1,26 @@
+{
+	"name": "DS_Adobe_ADLS_Source",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_adls_sink",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "BurtTest"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "load/staging",
+				"fileSystem": "test"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,7 @@
+{
+	"name": "PE_ADLS",
+	"properties": {
+		"privateLinkResourceId": "/subscriptions/1c0dd436-50b8-4d50-9c6d-cb5d07d8db01/resourceGroups/SEA-ADO-EDL-NonProd-01/providers/Microsoft.Storage/storageAccounts/abcmfcadoedl01dsea",
+		"groupId": "dfs"
+	}
+}

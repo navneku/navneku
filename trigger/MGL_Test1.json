@@ -1,0 +1,25 @@
+{
+	"name": "MGL_Test1",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Daily",
+				"interval": 1,
+				"startTime": "2022-08-10T06:00:00",
+				"endTime": "2023-08-10T06:00:00",
+				"timeZone": "SE Standard time"
+			}
+		}
+	}
+}

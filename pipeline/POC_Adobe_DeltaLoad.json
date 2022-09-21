@@ -1,0 +1,286 @@
+{
+	"name": "POC_Adobe_DeltaLoad",
+	"properties": {
+		"activities": [
+			{
+				"name": "FullLoad Copy into Merged hit_data1",
+				"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": {
+								"value": "Staging",
+								"type": "Expression"
+							},
+							"wildcardFileName": {
+								"value": "hit_data1.tsv",
+								"type": "Expression"
+							},
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings",
+							"copyBehavior": "MergeFiles"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"enableSkipIncompatibleRow": true
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS_Source2",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_Adobe_ADLS_Delimeted_Sink",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "FullLoad Copy into Merged hit_data2",
+				"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "FullLoad Copy into Landing_BeforeMerged",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": {
+								"value": "Staging",
+								"type": "Expression"
+							},
+							"wildcardFileName": {
+								"value": "hit_data2.tsv",
+								"type": "Expression"
+							},
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings",
+							"copyBehavior": "MergeFiles"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"enableSkipIncompatibleRow": true
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS_Source2",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_Adobe_ADLS_Delimeted_Sink",
+						"type": "DatasetReference"
+					}
+				]
+			},
+			{
+				"name": "FullLoad Copy into Landing_BeforeMerged",
+				"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "FullLoad Copy into Merged hit_data1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": {
+								"value": "Staging/Merged",
+								"type": "Expression"
+							},
+							"wildcardFileName": {
+								"value": "hit_data.tsv",
+								"type": "Expression"
+							},
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"parallelCopies": 20,
+					"enableSkipIncompatibleRow": true
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS_Source2",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_Delta_PRQ_Sink",
+						"type": "DatasetReference",
+						"parameters": {
+							"FullPath": {
+								"value": "Staging/Landing/hit_data_before_merge.parquet",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "FullLoad Copy into Landing_AfterMerged",
+				"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "FullLoad Copy into Merged hit_data2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"wildcardFolderPath": {
+								"value": "Staging/Merged",
+								"type": "Expression"
+							},
+							"wildcardFileName": {
+								"value": "hit_data.tsv",
+								"type": "Expression"
+							},
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"parallelCopies": 20,
+					"enableSkipIncompatibleRow": true
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ADLS_Source2",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS_Delta_PRQ_Sink",
+						"type": "DatasetReference",
+						"parameters": {
+							"FullPath": {
+								"value": "Staging/Landing/hit_data_after_merge.parquet",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "ProjTeam_POC"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-08-29T07:00:22Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

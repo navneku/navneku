@@ -1,0 +1,33 @@
+{
+	"name": "ADBTestTrigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-07-20T06:42:53",
+				"endTime": "2022-08-04T23:59:53",
+				"timeZone": "SE Asia Standard Time",
+				"schedule": {
+					"minutes": [
+						17
+					],
+					"hours": [
+						10
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"name": "LS_keyvault",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://mfcakv-sea-ngedl-nprd-02.vault.azure.net/"
+		}
+	}
+}

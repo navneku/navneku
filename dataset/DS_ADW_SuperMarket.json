@@ -1,0 +1,17 @@
+{
+	"name": "DS_ADW_SuperMarket",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADW",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "ray",
+			"table": "supermarket"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

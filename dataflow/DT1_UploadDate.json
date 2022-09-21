@@ -1,0 +1,35 @@
+{
+	"name": "DT1_UploadDate",
+	"properties": {
+		"folder": {
+			"name": "03 Data Transformation"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_Sink_DF",
+						"type": "DatasetReference"
+					},
+					"name": "SinkFile"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_adls_sinkDF",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SinkDT"
+				}
+			],
+			"transformations": [
+				{
+					"name": "LoadedDate"
+				}
+			],
+			"script": "parameters{\n\tFileTransformationName as string\n}\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tignoreNoFilesFound: false,\n\tformat: 'parquet') ~> SinkFile\nSinkFile derive(LoadDate = currentDate()) ~> LoadedDate\nLoadedDate sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\tfileSystem: 'sink',\n\tfolderPath: 'datatransformation',\n\tpartitionFileNames:[(concat($FileTransformationName,'.parquet'))],\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SinkDT"
+		}
+	}
+}

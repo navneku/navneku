@@ -1,0 +1,843 @@
+{
+	"name": "ad-hoc-copy-tclaim_details",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "OdbcSource",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "SqlDWSink"
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "tclaim_details.new_zip_code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "NEW_ZIP_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.new_phon_num",
+									"type": "String"
+								},
+								"sink": {
+									"name": "NEW_PHON_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.new_mobl_phon_num",
+									"type": "String"
+								},
+								"sink": {
+									"name": "NEW_MOBL_PHON_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_dnr_amt",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "CLM_DNR_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.real_dnr_amt",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "REAL_DNR_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.decline_reason",
+									"type": "String"
+								},
+								"sink": {
+									"name": "DECLINE_REASON",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.pol_num",
+									"type": "String"
+								},
+								"sink": {
+									"name": "POL_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.cli_num",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLI_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_eff_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "CLM_EFF_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_recv_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "CLM_RECV_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_stat_code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLM_STAT_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_prvd_amt",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "CLM_PRVD_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_aprov_amt",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "CLM_APROV_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_aprov_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "CLM_APROV_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLM_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_pend_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLM_PEND_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_folwup_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "CLM_FOLWUP_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_rmrk",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLM_RMRK",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.ex_gra_pmt",
+									"type": "String"
+								},
+								"sink": {
+									"name": "EX_GRA_PMT",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_tracking_num",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "CLM_TRACKING_NUM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 10
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_hosp_begin_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "CLM_HOSP_BEGIN_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_hosp_end_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "CLM_HOSP_END_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_medic_fee",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "CLM_MEDIC_FEE",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 2
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.cmd_num",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "CMD_NUM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 10
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.seq_num",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "SEQ_NUM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 6
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.event_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "EVENT_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.stat_chg_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "STAT_CHG_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_id",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLM_ID",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.com_doc_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "COM_DOC_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.invest_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "INVEST_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.medi_exam_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "MEDI_EXAM_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.medi_restl_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "MEDI_RESTL_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.sub_comm_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "SUB_COMM_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_com_restl_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "CLM_COM_RESTL_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.sub_hk_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "SUB_HK_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.hk_restl_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "HK_RESTL_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.decision_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "DECISION_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.next_reopn_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "NEXT_REOPN_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.reass_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "REASS_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.close_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "CLOSE_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.print_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PRINT_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.print_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "PRINT_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.paid_up_to",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "PAID_UP_TO",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.payo_typ",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PAYO_TYP",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.payo_arang",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PAYO_ARANG",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.tpd_stat_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "TPD_STAT_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.tpd_close_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "TPD_CLOSE_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.payee_num",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PAYEE_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.plan_code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PLAN_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.vers_num",
+									"type": "String"
+								},
+								"sink": {
+									"name": "VERS_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_app_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "CLM_APP_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.ex_aprov_code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "EX_APROV_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.first_event_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "FIRST_EVENT_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_natr",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLM_NATR",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_dec",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLM_DEC",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.wav_typ",
+									"type": "String"
+								},
+								"sink": {
+									"name": "WAV_TYP",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.med_rec_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "MED_REC_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.bnfy_comp_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "BNFY_COMP_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_reasn_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLM_REASN_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_reasn_remark",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLM_REASN_REMARK",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_cal_formula",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLM_CAL_FORMULA",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_suspicious",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLM_SUSPICIOUS",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.pos_num",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "POS_NUM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 6
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.decline_code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "DECLINE_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.clm_amt_remark",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CLM_AMT_REMARK",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.payee_nm",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PAYEE_NM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.decline_act",
+									"type": "String"
+								},
+								"sink": {
+									"name": "DECLINE_ACT",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.sbmt_date",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "SBMT_DATE",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tclaim_details.new_clm_addr",
+									"type": "String"
+								},
+								"sink": {
+									"name": "NEW_CLM_ADDR",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ODBC_VC_Ad_Hoc_Param_based",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": "kh_dev_published_src_cas_db",
+							"tbl_name": "tclaim_details"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": "raw",
+							"tbl_name": "tclaim_details"
+						}
+					}
+				]
+			}
+		],
+		"folder": {
+			"name": "Ad-Hoc-Copy"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-11-15T09:36:27Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

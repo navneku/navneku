@@ -1,0 +1,32 @@
+{
+	"name": "KH_CAS_Missing_Tables",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-09-07T11:03:00",
+				"timeZone": "China Standard Time",
+				"schedule": {
+					"minutes": [
+						8
+					],
+					"hours": [
+						12
+					]
+				}
+			}
+		}
+	}
+}

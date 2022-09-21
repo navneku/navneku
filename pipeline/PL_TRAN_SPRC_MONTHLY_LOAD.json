@@ -1,0 +1,622 @@
+{
+	"name": "PL_TRAN_SPRC_MONTHLY_LOAD",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_cvg_monthly",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[curated].[sp_cip_kh_cvg_monthly]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_pollps_monthly",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_SPRC_sp_cvg_monthly",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[curated].[sp_cip_kh_pollps_owndp_monthly]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_prempmt_monthly",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_SPRC_sp_pollps_monthly",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[curated].[sp_cip_kh_polprempmt_owndp_monthly]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_polclm_monthly",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[curated].[sp_cip_kh_polclm_owndp_monthly]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_polchg_monthly",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[curated].[sp_cip_kh_polchg_monthly]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_demog_monthly",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[curated].[sp_cip_kh_demog_monthly]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_cvg_monthly_Error_Log",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_SPRC_sp_cvg_monthly",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_CUSTOM_SPRC_sp_cvg_monthly",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_cvg_monthly').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Stored procedure",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_cvg_monthly').error.errorcode",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_cvg_monthly').error.message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_pollps_monthly_Error_Log",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_SPRC_sp_pollps_monthly",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_CUSTOM_SPRC_sp_pollps_monthly",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_pollps_monthly').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Stored procedure",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_pollps_monthly').error.errorcode",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_pollps_monthly').error.message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_prempmt_monthly_Error_Log",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_SPRC_sp_prempmt_monthly",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_CUSTOM_SPRC_sp_prempmt_monthly",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_prempmt_monthly').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Stored procedure",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_prempmt_monthly').error.errorcode",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_prempmt_monthly').error.message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_polclm_monthly_Error_Log",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_SPRC_sp_polclm_monthly",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_CUSTOM_SPRC_sp_polclm_monthly",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_polclm_monthly').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Stored procedure",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_polclm_monthly').error.errorcode",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_polclm_monthly').error.message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_polchg_monthly_Error_Log",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_SPRC_sp_polchg_monthly",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_CUSTOM_SPRC_sp_polchg_monthly",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_polchg_monthly').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Stored procedure",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_polchg_monthly').error.errorcode",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_polchg_monthly').error.message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "ACT_CUSTOM_SPRC_sp_demog_monthly_Error_Log",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_SPRC_sp_demog_monthly",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[error].[SP_InsertErrorLog]",
+					"storedProcedureParameters": {
+						"Activity_Name": {
+							"value": "ACT_CUSTOM_SPRC_sp_demog_monthly",
+							"type": "String"
+						},
+						"ActivityRunId": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_demog_monthly').ActivityRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ActivityType": {
+							"value": "Stored procedure",
+							"type": "String"
+						},
+						"ErrorCode": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_demog_monthly').error.errorcode",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"ErrorLoggedTime": {
+							"value": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"ErrorMessage": {
+							"value": {
+								"value": "@activity('ACT_CUSTOM_SPRC_sp_demog_monthly').error.message",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineName": {
+							"value": {
+								"value": "@pipeline().Pipeline",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"concurrency": 4,
+		"folder": {
+			"name": "E2E-Pipeline-Monthly-Load"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-11-26T09:08:05Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

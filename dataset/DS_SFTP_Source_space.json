@@ -1,0 +1,35 @@
+{
+	"name": "DS_SFTP_Source_space",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_FtpServer_Poc",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"Path": {
+				"type": "string"
+			},
+			"Object": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "SftpLocation",
+				"fileName": "Daily_APE_Policy_Change.csv",
+				"folderPath": {
+					"value": "/home/sqoop/adobe/kh_file_test",
+					"type": "Expression"
+				}
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "/",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

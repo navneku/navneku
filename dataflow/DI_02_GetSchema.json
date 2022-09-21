@@ -1,0 +1,40 @@
+{
+	"name": "DI_02_GetSchema",
+	"properties": {
+		"folder": {
+			"name": "01 Data Ingestion"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "LS_adls_sinkDF",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SourcePRQ"
+				}
+			],
+			"sinks": [
+				{
+					"name": "ColumnSchema"
+				}
+			],
+			"transformations": [
+				{
+					"name": "HierarchyDataType"
+				},
+				{
+					"name": "AggregateDataType"
+				},
+				{
+					"name": "ColumnDataType"
+				},
+				{
+					"name": "SetColumnId"
+				}
+			],
+			"script": "parameters{\n\tConvertFilePath as string\n}\nsource(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tlimit: 5000,\n\tignoreNoFilesFound: false,\n\tformat: 'parquet',\n\tfileSystem: 'sink',\n\tcompressionCodec: 'snappy',\n\twildcardPaths:[(concat($ConvertFilePath, '/*.parquet'))]) ~> SourcePRQ\nSetColumnId derive(each(match(true()), $$ = iif(isNull(toString($$)),9,iif(isTimestamp(toString($$), 'yyyy-MM-dd\\'T\\'HH:mm:ss'), 3, iif(isDate(toString($$), 'yyyy-MM-dd HH:mm:ss'), 3, iif(isDate(toString($$), 'yyyy-MM-dd'), 4,iif(and(instr(toString($$),'.') > 0,isDecimal(toString($$))), 5, iif(isInteger(toString($$)), 7, iif(isDouble(toString($$)), 6, iif(isBoolean(toString($$)), 8, iif(length(toString($$)) <= 255, 2, 1))))))))))) ~> HierarchyDataType\nHierarchyDataType aggregate(each(match(true()), $$ = min($$))) ~> AggregateDataType\nAggregateDataType derive(each(match(true()), $$ = iif(equals(toInteger($$),2),'Varchar(255)',iif(equals(toInteger($$),3),'Datetime',iif(equals(toInteger($$),4),'Date',iif(equals(toInteger($$),5),'Decimal(18,4)',iif(equals(toInteger($$),6),'Bigint',iif(equals(toInteger($$),7),'Int',iif(equals(toInteger($$),8),'Bit','Varchar(MAX)'))))))))) ~> ColumnDataType\nSourcePRQ select(mapColumn(\n\t\teach(match(true()),\n\t\t\tconcat('[',toString($#),']',$$) = $$)\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> SetColumnId\nColumnDataType sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tstore: 'cache',\n\tformat: 'inline',\n\toutput: true,\n\tsaveOrder: 1,\n\tpartitionBy('hash', 1),\n\tpreCommands: [],\n\tpostCommands: []) ~> ColumnSchema"
+		}
+	}
+}

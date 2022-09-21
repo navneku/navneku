@@ -1,0 +1,307 @@
+{
+	"name": "PL_Data_EDL_To_Jugaad_ADLS_Demo",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_EXEC_GetSourceData",
+				"description": "Retrieve source data info",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "metadata_table_schema",
+						"value": "dbo"
+					},
+					{
+						"name": "metadata_table_name",
+						"value": "test_table_2"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[demo].[Get_SourceData_List]",
+						"storedProcedureParameters": {
+							"sourcesystemname": {
+								"type": "String",
+								"value": {
+									"value": "@variables('source_system')",
+									"type": "Expression"
+								}
+							},
+							"targetsystemname": {
+								"type": "String",
+								"value": {
+									"value": "@variables('target_system')",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_ADW_DB",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ACT_DATA_ODBC_to_ADLS",
+				"description": "copy data from hive edl to adls through odbc",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "ACT_EXEC_GetSourceData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('ACT_EXEC_GetSourceData').output.value",
+						"type": "Expression"
+					},
+					"batchCount": 20,
+					"activities": [
+						{
+							"name": "EDL_to_ADLSGen2",
+							"description": "copy data from hive to adls",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Set Day",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Set Month",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Set Year",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "OdbcSource",
+									"queryTimeout": "02:00:00"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings",
+										"maxConcurrentConnections": 2,
+										"blockSizeInMB": 10
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"parallelCopies": 2,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Info",
+										"enableReliableLogging": false
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "abcmfcadoedl01dsea_DLG2",
+											"type": "LinkedServiceReference"
+										},
+										"path": "log/demo_log"
+									}
+								},
+								"dataIntegrationUnits": 2,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ODBC",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@item().SourceSchemaName",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@item().SourceEntityName",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS",
+									"type": "DatasetReference",
+									"parameters": {
+										"container_name": {
+											"value": "@item().TargetContainerName",
+											"type": "Expression"
+										},
+										"dir_name": {
+											"value": "@item().TargetEntityURL",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@concat(item().TargetEntityName,'_',variables('Year'),'_',variables('Month'),'_',variables('Day'))",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Set Year",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "year",
+								"value": {
+									"value": "@formatDateTime(convertFromUtc(utcnow(), 'China Standard Time'),'yyyy')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set Month",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "month",
+								"value": {
+									"value": "@formatDateTime(convertFromUtc(utcnow(), 'China Standard Time'),'MM')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set Day",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "day",
+								"value": {
+									"value": "@formatDateTime(convertFromUtc(utcnow(), 'China Standard Time'),'dd')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "ACT_Lookup_SaveOutPut",
+							"description": "capture file name in DB",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "EDL_to_ADLSGen2",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderStoredProcedureName": "[demo].[Update_ADLS_Filename]",
+									"storedProcedureParameters": {
+										"adlsfilename": {
+											"type": "String",
+											"value": {
+												"value": "@concat(item().TargetEntityName,'_',variables('Year'),'_',variables('Month'),'_',variables('Day'))",
+												"type": "Expression"
+											}
+										},
+										"tablename": {
+											"type": "String",
+											"value": {
+												"value": "@item().TargetEntityName",
+												"type": "Expression"
+											}
+										}
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_ADW_DB",
+									"type": "DatasetReference"
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"concurrency": 2,
+		"variables": {
+			"source_system": {
+				"type": "String",
+				"defaultValue": "edl_hive"
+			},
+			"target_system": {
+				"type": "String",
+				"defaultValue": "jugaad_adls"
+			},
+			"year": {
+				"type": "String"
+			},
+			"month": {
+				"type": "String"
+			},
+			"day": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Non-Prod testing and POC only"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-11-15T09:51:35Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

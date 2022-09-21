@@ -1,0 +1,7 @@
+{
+	"name": "mfcblobkhmdevsea01",
+	"properties": {
+		"privateLinkResourceId": "/subscriptions/96bdec4d-beee-4317-8e6d-06fc6b76cb79/resourceGroups/SEA-KHM-NonProd-01/providers/Microsoft.Storage/storageAccounts/mfcblobkhmdevsea01",
+		"groupId": "blob"
+	}
+}

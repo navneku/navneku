@@ -1,0 +1,63 @@
+{
+	"name": "02_getSpecifyZipFile",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute daily zip files",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "02_getFtpFiles2ADLS_Bin_2",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"Filename": {
+							"value": "@pipeline().parameters.FileName",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "get daily tsv files",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Execute daily zip files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "01_GetMultipleCSVfiles_Poc_2",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"SrcPath": {
+							"value": "@pipeline().parameters.FileName",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"FileName": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "BurtTest/CopySFTP"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-08-30T03:35:09Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

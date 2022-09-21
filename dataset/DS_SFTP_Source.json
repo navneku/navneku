@@ -1,0 +1,23 @@
+{
+	"name": "DS_SFTP_Source",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_FtpServer_Poc",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "SftpLocation",
+				"folderPath": "/home/sqoop/adobe/kh_file_test"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "/",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

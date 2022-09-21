@@ -1,0 +1,194 @@
+{
+	"name": "PL_11_2_DataTransformation_CheckOutputFiles_test",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEach_TransformationNullStatus",
+				"description": "Iterates over an the ‘FileTransformationName’ array values ",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@split(pipeline().parameters.FileTransformationName,';')",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Append variable1",
+							"description": "Sets value for the variable ‘OutputFile’.",
+							"type": "AppendVariable",
+							"dependsOn": [
+								{
+									"activity": "Get Metadata OutputFile",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "OutputFile",
+								"value": {
+									"value": "@if(activity('Get Metadata OutputFile').output.exists,'FileFound','FileNotFound')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Get Metadata OutputFile",
+							"description": "Lookup for Output files of the transformations with NULL status when they failed before updating the DtLog table",
+							"type": "GetMetadata",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "DF_Sink_DataTransformation_ADLS",
+									"type": "DatasetReference",
+									"parameters": {
+										"OutputPath": {
+											"value": "@if(equals(pipeline().parameters.TransformationPathGranularity,'YY'),CONCAT(pipeline().parameters.FunctionName,'/',item(),'/',formatDateTime(pipeline().parameters.OutputUpdateDate,'yyyy'),'/',item(),'_',formatDateTime(pipeline().parameters.OutputUpdateDate,'yyyy'),formatDateTime(pipeline().parameters.OutputUpdateDate,'MM'),formatDateTime(pipeline().parameters.OutputUpdateDate,'dd'),formatDateTime(pipeline().parameters.OutputUpdateDate,'HH'),formatDateTime(pipeline().parameters.OutputUpdateDate,'mm'),'.csv'),\nif(equals(pipeline().parameters.TransformationPathGranularity,'MM'),CONCAT(pipeline().parameters.FunctionName,'/',item(),'/',formatDateTime(pipeline().parameters.OutputUpdateDate,'yyyy'),'/',formatDateTime(pipeline().parameters.OutputUpdateDate,'MM'),'/',item(),'_',formatDateTime(pipeline().parameters.OutputUpdateDate,'yyyy'),formatDateTime(pipeline().parameters.OutputUpdateDate,'MM'),formatDateTime(pipeline().parameters.OutputUpdateDate,'dd'),formatDateTime(pipeline().parameters.OutputUpdateDate,'HH'),formatDateTime(pipeline().parameters.OutputUpdateDate,'mm'),'.csv'),\nif(equals(pipeline().parameters.TransformationPathGranularity,'DD'),CONCAT(pipeline().parameters.FunctionName,'/',item(),'/',formatDateTime(pipeline().parameters.OutputUpdateDate,'yyyy'),'/',formatDateTime(pipeline().parameters.OutputUpdateDate,'MM'),'/',formatDateTime(pipeline().parameters.OutputUpdateDate,'dd'),'/',item(),'_',formatDateTime(pipeline().parameters.OutputUpdateDate,'yyyy'),formatDateTime(pipeline().parameters.OutputUpdateDate,'MM'),formatDateTime(pipeline().parameters.OutputUpdateDate,'dd'),formatDateTime(pipeline().parameters.OutputUpdateDate,'HH'),formatDateTime(pipeline().parameters.OutputUpdateDate,'mm'),'.csv'),\nCONCAT(pipeline().parameters.FunctionName,'/',item(),'/',formatDateTime(pipeline().parameters.OutputUpdateDate,'yyyy'),'/',formatDateTime(pipeline().parameters.OutputUpdateDate,'MM'),'/',formatDateTime(pipeline().parameters.OutputUpdateDate,'dd'),'/',formatDateTime(pipeline().parameters.OutputUpdateDate,'HH'),'/',item(),'_',formatDateTime(pipeline().parameters.OutputUpdateDate,'yyyy'),formatDateTime(pipeline().parameters.OutputUpdateDate,'MM'),formatDateTime(pipeline().parameters.OutputUpdateDate,'dd'),formatDateTime(pipeline().parameters.OutputUpdateDate,'HH'),formatDateTime(pipeline().parameters.OutputUpdateDate,'mm'),'.csv'))))",
+											"type": "Expression"
+										}
+									}
+								},
+								"fieldList": [
+									"exists"
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "If OutputFound",
+				"description": "If output files are found then update status in DtLogTable. If not then perform transformation again",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "ForEach_TransformationNullStatus",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@contains(variables('OutputFile'),'FileNotFound')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "sp_UpdateDtLogSuccess",
+							"description": "Updates the status in the DtLog table with successful status",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_DtLogUpdte]",
+								"storedProcedureParameters": {
+									"DtOutputId": {
+										"value": {
+											"value": "@pipeline().parameters.DtOutputId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtConfigId": {
+										"value": {
+											"value": "@pipeline().parameters.DtConfigId",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"EntRunId": {
+										"value": {
+											"value": "@pipeline().parameters.EntRunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtRunId": {
+										"value": {
+											"value": "@pipeline().parameters.DtRunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"DtStatus": {
+										"value": "Succeded",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_sqlconfiguration",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"FileTransformationName": {
+				"type": "string"
+			},
+			"TransformationPathGranularity": {
+				"type": "string"
+			},
+			"FunctionName": {
+				"type": "string"
+			},
+			"OutputUpdateDate": {
+				"type": "string"
+			},
+			"DtOutputId": {
+				"type": "string"
+			},
+			"DtConfigId": {
+				"type": "string"
+			},
+			"EntRunId": {
+				"type": "string"
+			},
+			"DtRunId": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"OutputFile": {
+				"type": "Array"
+			}
+		},
+		"folder": {
+			"name": "03 test Data Transformation Module"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-04-25T07:17:53Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

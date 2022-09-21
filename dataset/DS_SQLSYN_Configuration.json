@@ -1,0 +1,20 @@
+{
+	"name": "DS_SQLSYN_Configuration",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_SYN",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "01 Ingestion Module DS"
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "dvlog"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

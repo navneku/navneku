@@ -1,0 +1,141 @@
+{
+	"name": "PL_14_FTP_CompFile_Precon",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEachObject",
+				"description": "Iterates over a dataset and loop by number of rows it gets with the output from ‘LookupFwkConfig’ activity.",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@array(pipeline().parameters.FwkItem)",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "Execute PL_14_FTP_CompFile_CopyAndMerge",
+							"description": "This pipeline is used to execute all the inner activities that are included in the PL_14_FTP_CompFile_CopyAndMerge pipeline\n",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_14_FTP_CompFile_CopyAndMerge",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"FwkItem": {
+										"value": "@pipeline().parameters.FwkItem",
+										"type": "Expression"
+									},
+									"PL_01TriggerTime": {
+										"value": "@pipeline().parameters.PL_01TriggerTime",
+										"type": "Expression"
+									},
+									"FwkLogId": {
+										"value": "@pipeline().parameters.FwkLogId",
+										"type": "Expression"
+									},
+									"EntRunId": {
+										"value": "@pipeline().parameters.EntRunId",
+										"type": "Expression"
+									},
+									"SrcPath": {
+										"value": "@pipeline().parameters.SrcPath",
+										"type": "Expression"
+									},
+									"SrcObject": {
+										"value": "@pipeline().parameters.SrcObject",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Execute PL_14_FTP_CompFile_CopyAndMerge_Rerun",
+							"description": "This pipeline is used to execute all the inner activities that are included in the PL_14_FTP_CompFile_CopyAndMerge_Rerun pipeline\n",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "Execute PL_14_FTP_CompFile_CopyAndMerge",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_14_FTP_CompFile_CopyAndMerge_Rerun",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"FwkItem": {
+										"value": "@pipeline().parameters.FwkItem",
+										"type": "Expression"
+									},
+									"PL_01TriggerTime": {
+										"value": "@pipeline().parameters.PL_01TriggerTime",
+										"type": "Expression"
+									},
+									"FwkLogId": {
+										"value": "@pipeline().parameters.FwkLogId",
+										"type": "Expression"
+									},
+									"EntRunId": {
+										"value": "@pipeline().parameters.EntRunId",
+										"type": "Expression"
+									},
+									"SrcPath": {
+										"value": "@pipeline().parameters.SrcPath",
+										"type": "Expression"
+									},
+									"SrcObject": {
+										"value": "@pipeline().parameters.SrcObject",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"FwkItem": {
+				"type": "array"
+			},
+			"PL_01TriggerTime": {
+				"type": "string"
+			},
+			"FwkLogId": {
+				"type": "string"
+			},
+			"EntRunId": {
+				"type": "string"
+			},
+			"SrcPath": {
+				"type": "string"
+			},
+			"SrcObject": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"SrcCompObect": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "01 Ingestion Module/PL_14_MultiFile_ADLSFullLoad"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-09-11T01:46:21Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

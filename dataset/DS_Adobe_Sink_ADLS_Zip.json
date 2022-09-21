@@ -1,0 +1,22 @@
+{
+	"name": "DS_Adobe_Sink_ADLS_Zip",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_blobcsv",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "BurtTest"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "load/staging",
+				"container": "test"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

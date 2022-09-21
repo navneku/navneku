@@ -1,0 +1,20 @@
+{
+	"name": "DS_SFTP_Excel_Source",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_FtpServer_Poc",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "SftpLocation"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

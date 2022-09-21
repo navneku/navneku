@@ -1,0 +1,25 @@
+{
+	"name": "Gayathri_ingestion_file_test",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 5,
+				"startTime": "2022-09-19T17:06:00",
+				"endTime": "2022-09-19T17:30:00",
+				"timeZone": "SE Asia Standard Time"
+			}
+		}
+	}
+}

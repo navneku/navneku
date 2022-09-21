@@ -1,0 +1,176 @@
+{
+	"name": "PL_14_FTP_LoadFtp2Loading_ADLS_Main",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get FileList",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_Adobe_ADLS_Binary_Sink",
+						"type": "DatasetReference",
+						"parameters": {
+							"Container": {
+								"value": "@pipeline().parameters.SinkContainer",
+								"type": "Expression"
+							},
+							"Directory": {
+								"value": "@concat(pipeline().parameters.SinkDirectory,'/',pipeline().parameters.SrcCompObject)",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"exists"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			},
+			{
+				"name": "If Condition1",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Get FileList",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@activity('Get FileList').output.exists",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Execute PL_14_FTP_LoadFtp2Loading_ADLS",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_14_FTP_LoadFtp2Loading_ADLS",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"SrcCompPath": {
+										"value": "@pipeline().parameters.SrcCompPath",
+										"type": "Expression"
+									},
+									"SrcCompObject": {
+										"value": "@pipeline().parameters.SrcCompObject",
+										"type": "Expression"
+									},
+									"CompressionType": {
+										"value": "@pipeline().parameters.CompressionType",
+										"type": "Expression"
+									},
+									"SinkContainer": {
+										"value": "@pipeline().parameters.SinkContainer",
+										"type": "Expression"
+									},
+									"SinkDirectory": {
+										"value": "@pipeline().parameters.SinkDirectory",
+										"type": "Expression"
+									},
+									"EntRunId": {
+										"value": "@pipeline().RunId",
+										"type": "Expression"
+									},
+									"TriggerName": {
+										"value": "@pipeline().TriggerName",
+										"type": "Expression"
+									},
+									"TriggerTime": {
+										"value": "@pipeline().TriggerTime",
+										"type": "Expression"
+									},
+									"ColDelimiter": {
+										"value": "@pipeline().parameters.ColDelimiter",
+										"type": "Expression"
+									},
+									"RowDelimiter": {
+										"value": "@pipeline().parameters.RowDelimiter",
+										"type": "Expression"
+									},
+									"SinkMergeDirectory": {
+										"value": "@pipeline().parameters.SinkMergeDirectory",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"SrcCompPath": {
+				"type": "string",
+				"defaultValue": "/home/sqoop/adobe/ph_adobe_allsites"
+			},
+			"SrcCompObject": {
+				"type": "string",
+				"defaultValue": "@concat('manufin-manulifecomph-prod_',adddays(formatDateTime(utcnow(),'yyyy-MM-dd'),-1),'.zip')"
+			},
+			"CompressionType": {
+				"type": "string",
+				"defaultValue": "ZipDeflate"
+			},
+			"SinkContainer": {
+				"type": "string",
+				"defaultValue": "dev"
+			},
+			"SinkDirectory": {
+				"type": "string",
+				"defaultValue": "Staging/Loading"
+			},
+			"EntRunId": {
+				"type": "string"
+			},
+			"TriggerName": {
+				"type": "string"
+			},
+			"TriggerTime": {
+				"type": "string"
+			},
+			"ColDelimiter": {
+				"type": "string",
+				"defaultValue": "\\t"
+			},
+			"RowDelimiter": {
+				"type": "string",
+				"defaultValue": null
+			},
+			"SinkMergeDirectory": {
+				"type": "string",
+				"defaultValue": "Staging/Merged"
+			}
+		},
+		"folder": {
+			"name": "01 Ingestion Module/PL_15_FTP_CompMultiFile_Load_Adobe"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-09-20T01:21:08Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

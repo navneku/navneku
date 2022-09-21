@@ -1,0 +1,27 @@
+{
+	"name": "DS_ADOBE_ADLS_SINK",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_adls_sink",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "BurtTest"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": {
+					"value": "raw",
+					"type": "Expression"
+				},
+				"fileSystem": "test"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

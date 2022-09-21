@@ -1,0 +1,33 @@
+{
+	"name": "OracleTestTrigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-07-20T01:36:28",
+				"endTime": "2022-09-05T17:58:28",
+				"timeZone": "India Standard Time",
+				"schedule": {
+					"minutes": [
+						54
+					],
+					"hours": [
+						16
+					]
+				}
+			}
+		}
+	}
+}

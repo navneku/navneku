@@ -1,0 +1,166 @@
+{
+	"name": "PL_00_TriggerValidation_Adobe",
+	"properties": {
+		"description": "Create or update triggers.",
+		"activities": [
+			{
+				"name": "Lookup FwkTrigger Table",
+				"description": "Executes the SP ‘sps_LookupFwkTrigger’ that returns the data to create the trigger by active flag from the table ‘FwkTrigger’.",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[dbo].[sps_LookupFwkTrigger]",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLSYN_Configuration",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach Trigger",
+				"description": "Iterates using the content returned by ‘Lookup FwkTrigger Table’ activity.",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup FwkTrigger Table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@array(activity('Lookup FwkTrigger Table').output.value)",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Create_Trigger_RestAPI",
+							"description": "This will create the scheduled triggers in the targeted ADF with the settings returned by the ‘Lookup FwkTrigger Table’ activity.",
+							"type": "WebActivity",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"url": {
+									"value": "@concat('https://management.azure.com/subscriptions/1c0dd436-50b8-4d50-9c6d-cb5d07d8db01/resourceGroups/SEA-ADO-EDL-NonProd-01/providers/Microsoft.DataFactory/factories/mfcdafangedlnonprodsea02/triggers/',item().TriggerName,'?api-version=2018-06-01')",
+									"type": "Expression"
+								},
+								"connectVia": {
+									"referenceName": "integrationRuntime1",
+									"type": "IntegrationRuntimeReference"
+								},
+								"method": "PUT",
+								"body": {
+									"value": "{\n    \"properties\": {\n        \"type\": \"ScheduleTrigger\",\n        \"typeProperties\": {\n            \"recurrence\": {\n                \"frequency\": @{concat('\"',item().Frequency, '\"')},\n                \"interval\": @{item().Interval},\n                \"startTime\": @{concat('\"',item().StartTime, '\"')},\n                \"endTime\": @{concat('\"',item().EndTime, '\"')},\n                \"timeZone\": @{concat('\"',item().TimeZone, '\"')}\n            }\n        },\n        \"pipelines\": [{\n                \"pipelineReference\": {\n                    \"type\": \"PipelineReference\",\n                    \"referenceName\": \"PL_DataSupplyChainBus_Adobe\"\n                }\n            }\n        ]\n    }\n}\n\n\n\n\n\n\n",
+									"type": "Expression"
+								},
+								"authentication": {
+									"type": "MSI",
+									"resource": {
+										"value": "https://management.core.windows.net/",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "Start_Trigger_RestAPI",
+							"type": "WebActivity",
+							"dependsOn": [
+								{
+									"activity": "Create_Trigger_RestAPI",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"url": {
+									"value": "@concat('https://management.azure.com/subscriptions/1c0dd436-50b8-4d50-9c6d-cb5d07d8db01/resourceGroups/SEA-ADO-EDL-NonProd-01/providers/Microsoft.DataFactory/factories/mfcdafangedlnonprodsea02/triggers/',item().TriggerName,'/start?api-version=2018-06-01')",
+									"type": "Expression"
+								},
+								"connectVia": {
+									"referenceName": "integrationRuntime1",
+									"type": "IntegrationRuntimeReference"
+								},
+								"method": "POST",
+								"body": {
+									"value": "{\"body\": \"\"}",
+									"type": "Expression"
+								},
+								"authentication": {
+									"type": "MSI",
+									"resource": {
+										"value": "https://management.core.windows.net/",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Update FwkTrigger Table",
+				"description": "Executes the ‘spu_FwkTriggerUpdate’ SP to update the ActiveFlag and LastUpdate columns in the ‘FwkTrigger’ table.",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "ForEach Trigger",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[spu_FwkTriggerUpdate]"
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-09-11T06:39:18Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

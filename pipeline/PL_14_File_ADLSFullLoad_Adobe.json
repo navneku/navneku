@@ -1,0 +1,1685 @@
+{
+	"name": "PL_14_File_ADLSFullLoad_Adobe",
+	"properties": {
+		"activities": [
+			{
+				"name": "If is FullLoad",
+				"description": "Evaluates the ‘LoadType’ and go in case it matches.",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(pipeline().parameters.FwkItem['TypeLoad'], 1)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "FullLoad Copy into Landing_delta",
+							"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "LookupSrcMaxValue_delta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "sp_AddtoWmk_delta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"additionalColumns": [
+										{
+											"name": "LastUpdate",
+											"value": {
+												"value": "@formatDateTime(pipeline().parameters.PL_01TriggerTime)",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "CreatedBy",
+											"value": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											}
+										}
+									],
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings",
+										"maxConcurrentConnections": {
+											"value": "@pipeline().parameters.FwkItem['MaxConcurrency']",
+											"type": "Expression"
+										},
+										"blockSizeInMB": {
+											"value": "@pipeline().parameters.FwkItem['BlockSize']",
+											"type": "Expression"
+										}
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"parallelCopies": {
+									"value": "@pipeline().parameters.FwkItem['DegreeOfParallelism']",
+									"type": "Expression"
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_Adobe_ADLS_CSV_Source",
+									"type": "DatasetReference",
+									"parameters": {
+										"Container": {
+											"value": "@pipeline().parameters.FwkItem['SinkContainer']",
+											"type": "Expression"
+										},
+										"Directory": {
+											"value": "@pipeline().parameters.FwkItem['SinkMergeDirectory']",
+											"type": "Expression"
+										},
+										"Object": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"ColDelimiter": {
+											"value": "@pipeline().parameters.FwkItem['ColDelimiter']",
+											"type": "Expression"
+										},
+										"RowDelimiter": {
+											"value": "@pipeline().parameters.FwkItem['RowDelimiter']",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Raw', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Delta', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.FwkItem['SrcObject'],'.')[0]),\n'/',formatDateTime(adddays(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy/MM/dd'),-1),'yyyy/MM/dd'),\n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(split(pipeline().parameters.FwkItem['SrcObject'],'.')[0]),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "sp_AddtoWmk_delta",
+							"description": "Executes the SP ‘spi_FwkWatermarkInsert’ to create watermark for the source object.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spi_FwkWatermarkInsert]",
+								"storedProcedureParameters": {
+									"FwkConfigId": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['FwkConfigId']",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"SrcObjectChild": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"WmkDataType": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['WmkDataType']",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"SrcObject": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "LookupSrcMaxValue_delta",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"dataset": {
+									"referenceName": "DS_Adobe_ADLS_CSV_Source",
+									"type": "DatasetReference",
+									"parameters": {
+										"Container": {
+											"value": "@pipeline().parameters.FwkItem['SinkContainer']",
+											"type": "Expression"
+										},
+										"Directory": {
+											"value": "@pipeline().parameters.FwkItem['SinkMergeDirectory']",
+											"type": "Expression"
+										},
+										"Object": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"ColDelimiter": {
+											"value": "@pipeline().parameters.FwkItem['ColDelimiter']",
+											"type": "Expression"
+										},
+										"RowDelimiter": {
+											"value": "@pipeline().parameters.FwkItem['RowDelimiter']",
+											"type": "Expression"
+										}
+									}
+								}
+							}
+						},
+						{
+							"name": "sp_UpdateFwkWatermark_delta",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "FullLoad Copy into Landing_delta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_FwkWatermarkFullUpdate]",
+								"storedProcedureParameters": {
+									"SrcObject": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SchemaName": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SchemaName']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"WmkDataType": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['WmkDataType']",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"WmkColumnName": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['WmkColumnName']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SourceType": {
+										"value": {
+											"value": "@{pipeline().parameters.FwkItem['SourceType']}",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"OldValueWmk": {
+										"value": {
+											"value": "1",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"LastModifiedTime": {
+										"value": {
+											"value": "@formatdatetime(pipeline().parameters.PL_01TriggerTime)",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"ConvertPath": {
+										"value": {
+											"value": "@CONCAT('Processing', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(pipeline().parameters.SrcObject),\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))),\n'/'\n)",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "spi_LogFwkCopyDataRowCount_Landing_delta",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "sp_UpdateFwkWatermark_delta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spi_LogFwkCopyDataRowCount]",
+								"storedProcedureParameters": {
+									"SrcObject": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SourceType": {
+										"value": {
+											"value": "@{pipeline().parameters.FwkItem['SourceType']}",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"RowsReadInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing_delta').output.rowsRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"RowsCopiedInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing_delta').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"DataReadInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing_delta').output.dataRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"DataWrittenInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing_delta').output.dataWritten",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"LastModifiedTime": {
+										"value": {
+											"value": "@formatdatetime(pipeline().parameters.PL_01TriggerTime)",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"FilePath": {
+										"value": {
+											"value": "@CONCAT('Raw', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(pipeline().parameters.SrcObject),\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))),\n'/'\n)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TriggerId": {
+										"value": {
+											"value": "@pipeline().TriggerId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ActivityName": {
+										"value": "FullLoad Copy into Landing",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "FullLoad Copy into Published_delta",
+							"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "spi_LogFwkCopyDataRowCount_Landing_delta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": true
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_GET",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Raw', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Delta', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.FwkItem['SrcObject'],'.')[0]),\n'/',formatDateTime(adddays(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy/MM/dd'),-1),'yyyy/MM/dd'),\n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(split(pipeline().parameters.FwkItem['SrcObject'],'.')[0]),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Delta', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n'/',formatDateTime(adddays(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy/MM/dd'),-1),'yyyy/MM/dd'),\n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "FullLoad Copy into Master_delta",
+							"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "spi_LogFwkCopyDataRowCount_Landing_delta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": true
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_GET",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Raw', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Delta', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.FwkItem['SrcObject'],'.')[0]),\n'/',formatDateTime(adddays(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy/MM/dd'),-1),'yyyy/MM/dd'),\n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(split(pipeline().parameters.FwkItem['SrcObject'],'.')[0]),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Master', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n'/',formatDateTime(adddays(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy/MM/dd'),-1),'yyyy/MM/dd'),\n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "spi_LogFwkCopyDataRowCount_Master_delta",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "FullLoad Copy into Master_delta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spi_LogFwkCopyDataRowCount]",
+								"storedProcedureParameters": {
+									"SrcObject": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SourceType": {
+										"value": {
+											"value": "@{pipeline().parameters.FwkItem['SourceType']}",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"RowsReadInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing_delta').output.rowsRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"RowsCopiedInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing_delta').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"DataReadInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing_delta').output.dataRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"DataWrittenInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing_delta').output.dataWritten",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"LastModifiedTime": {
+										"value": {
+											"value": "@formatdatetime(pipeline().parameters.PL_01TriggerTime)",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"FilePath": {
+										"value": {
+											"value": "@CONCAT('Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Master', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(pipeline().parameters.SrcObject),\n'/'\n)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TriggerId": {
+										"value": {
+											"value": "@pipeline().TriggerId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ActivityName": {
+										"value": "FullLoad Copy into Master",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "spi_LogFwkCopyDataRowCount_Published_delta",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "FullLoad Copy into Published_delta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spi_LogFwkCopyDataRowCount]",
+								"storedProcedureParameters": {
+									"SrcObject": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SourceType": {
+										"value": {
+											"value": "@{pipeline().parameters.FwkItem['SourceType']}",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"RowsReadInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing_delta').output.rowsRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"RowsCopiedInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing_delta').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"DataReadInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing_delta').output.dataRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"DataWrittenInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing_delta').output.dataWritten",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"LastModifiedTime": {
+										"value": {
+											"value": "@formatdatetime(pipeline().parameters.PL_01TriggerTime)",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"FilePath": {
+										"value": {
+											"value": "@CONCAT('Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(pipeline().parameters.SrcObject),\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))),\n'/'\n)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TriggerId": {
+										"value": {
+											"value": "@pipeline().TriggerId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ActivityName": {
+										"value": "FullLoad Copy into Published",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "add header into master file_copy1",
+							"type": "DatabricksNotebook",
+							"dependsOn": [
+								{
+									"activity": "FullLoad Copy into Master_delta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Shared/Data Ingestion (Shared)/DI_03_Add_Schema_to_Parquet",
+								"baseParameters": {
+									"Container": {
+										"value": "@pipeline().parameters.FwkItem['SinkContainer']",
+										"type": "Expression"
+									},
+									"DDirectory": {
+										"value": "@concat('dbfs:/mnt/datadictionary/EDL_DataDict_','SG','_test.xlsx')",
+										"type": "Expression"
+									},
+									"Object": {
+										"value": "@toLower(split(pipeline().parameters.SrcObject,'.')[0])",
+										"type": "Expression"
+									},
+									"File_Path": {
+										"value": "@CONCAT('/Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Master', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n'/',formatDateTime(adddays(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy/MM/dd'),-1),'yyyy/MM/dd'),\n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n\t'.parquet'\n)",
+										"type": "Expression"
+									},
+									"Output_Path": {
+										"value": "@CONCAT('/Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Master', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n'/',formatDateTime(adddays(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy/MM/dd'),-1),'yyyy/MM/dd')\n)",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_databricks",
+								"type": "LinkedServiceReference"
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "FullLoad Copy into Landing",
+							"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "LookupSrcMaxValue",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "sp_AddtoWmk",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"additionalColumns": [
+										{
+											"name": "LastUpdate",
+											"value": {
+												"value": "@formatDateTime(pipeline().parameters.PL_01TriggerTime)",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "CreatedBy",
+											"value": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											}
+										}
+									],
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings",
+										"maxConcurrentConnections": {
+											"value": "@pipeline().parameters.FwkItem['MaxConcurrency']",
+											"type": "Expression"
+										},
+										"blockSizeInMB": {
+											"value": "@pipeline().parameters.FwkItem['BlockSize']",
+											"type": "Expression"
+										}
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"parallelCopies": {
+									"value": "@pipeline().parameters.FwkItem['DegreeOfParallelism']",
+									"type": "Expression"
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_Adobe_ADLS_CSV_Source",
+									"type": "DatasetReference",
+									"parameters": {
+										"Container": {
+											"value": "@pipeline().parameters.FwkItem['SinkContainer']",
+											"type": "Expression"
+										},
+										"Directory": {
+											"value": "@pipeline().parameters.FwkItem['SinkMergeDirectory']",
+											"type": "Expression"
+										},
+										"Object": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"ColDelimiter": {
+											"value": "@pipeline().parameters.FwkItem['ColDelimiter']",
+											"type": "Expression"
+										},
+										"RowDelimiter": {
+											"value": "@pipeline().parameters.FwkItem['RowDelimiter']",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Raw', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n'/',formatDateTime(adddays(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy/MM/dd'),-1),'yyyy/MM/dd'),\n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "sp_AddtoWmk",
+							"description": "Executes the SP ‘spi_FwkWatermarkInsert’ to create watermark for the source object.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spi_FwkWatermarkInsert]",
+								"storedProcedureParameters": {
+									"FwkConfigId": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['FwkConfigId']",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"SrcObjectChild": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"WmkDataType": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['WmkDataType']",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"SrcObject": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "LookupSrcMaxValue",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"dataset": {
+									"referenceName": "DS_Adobe_ADLS_CSV_Source",
+									"type": "DatasetReference",
+									"parameters": {
+										"Container": {
+											"value": "@pipeline().parameters.FwkItem['SinkContainer']",
+											"type": "Expression"
+										},
+										"Directory": {
+											"value": "@pipeline().parameters.FwkItem['SinkMergeDirectory']",
+											"type": "Expression"
+										},
+										"Object": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"ColDelimiter": {
+											"value": "@pipeline().parameters.FwkItem['ColDelimiter']",
+											"type": "Expression"
+										},
+										"RowDelimiter": {
+											"value": "@pipeline().parameters.FwkItem['RowDelimiter']",
+											"type": "Expression"
+										}
+									}
+								}
+							}
+						},
+						{
+							"name": "sp_UpdateFwkWatermark",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "FullLoad Copy into Landing",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_FwkWatermarkFullUpdate]",
+								"storedProcedureParameters": {
+									"SrcObject": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SchemaName": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SchemaName']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"WmkDataType": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['WmkDataType']",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"WmkColumnName": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['WmkColumnName']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SourceType": {
+										"value": {
+											"value": "@{pipeline().parameters.FwkItem['SourceType']}",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"OldValueWmk": {
+										"value": {
+											"value": "1",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"LastModifiedTime": {
+										"value": {
+											"value": "@formatdatetime(pipeline().parameters.PL_01TriggerTime)",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"ConvertPath": {
+										"value": {
+											"value": "@CONCAT('Processing', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(pipeline().parameters.SrcObject),\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))),\n'/'\n)",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "FullLoad Copy into Published",
+							"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "spi_LogFwkCopyDataRowCount_Landing",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": true
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_GET",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Raw', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n'/',formatDateTime(adddays(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy/MM/dd'),-1),'yyyy/MM/dd'),\n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n'/',formatDateTime(adddays(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy/MM/dd'),-1),'yyyy/MM/dd'),\n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "spi_LogFwkCopyDataRowCount_Landing",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "sp_UpdateFwkWatermark",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spi_LogFwkCopyDataRowCount]",
+								"storedProcedureParameters": {
+									"SrcObject": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SourceType": {
+										"value": {
+											"value": "@{pipeline().parameters.FwkItem['SourceType']}",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"RowsReadInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing').output.rowsRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"RowsCopiedInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"DataReadInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing').output.dataRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"DataWrittenInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing').output.dataWritten",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"LastModifiedTime": {
+										"value": {
+											"value": "@formatdatetime(pipeline().parameters.PL_01TriggerTime)",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"FilePath": {
+										"value": {
+											"value": "@CONCAT('Raw', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(pipeline().parameters.SrcObject),\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))),\n'/'\n)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TriggerId": {
+										"value": {
+											"value": "@pipeline().TriggerId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ActivityName": {
+										"value": "FullLoad Copy into Landing",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "spi_LogFwkCopyDataRowCount_Published",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "FullLoad Copy into Published",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spi_LogFwkCopyDataRowCount]",
+								"storedProcedureParameters": {
+									"SrcObject": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SourceType": {
+										"value": {
+											"value": "@{pipeline().parameters.FwkItem['SourceType']}",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"RowsReadInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing').output.rowsRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"RowsCopiedInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"DataReadInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing').output.dataRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"DataWrittenInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing').output.dataWritten",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"LastModifiedTime": {
+										"value": {
+											"value": "@formatdatetime(pipeline().parameters.PL_01TriggerTime)",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"FilePath": {
+										"value": {
+											"value": "@CONCAT('Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(pipeline().parameters.SrcObject),\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))),\n'/'\n)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TriggerId": {
+										"value": {
+											"value": "@pipeline().TriggerId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ActivityName": {
+										"value": "FullLoad Copy into Published",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "FullLoad Copy into Master",
+							"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "spi_LogFwkCopyDataRowCount_Landing",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": true
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_GET",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Raw', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n'/',formatDateTime(adddays(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy/MM/dd'),-1),'yyyy/MM/dd'),\n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Master', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "spi_LogFwkCopyDataRowCount_Master",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "FullLoad Copy into Master",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spi_LogFwkCopyDataRowCount]",
+								"storedProcedureParameters": {
+									"SrcObject": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SourceType": {
+										"value": {
+											"value": "@{pipeline().parameters.FwkItem['SourceType']}",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"RowsReadInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing').output.rowsRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"RowsCopiedInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing').output.rowsCopied",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"DataReadInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing').output.dataRead",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"DataWrittenInt": {
+										"value": {
+											"value": "@activity('FullLoad Copy into Landing').output.dataWritten",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"LastModifiedTime": {
+										"value": {
+											"value": "@formatdatetime(pipeline().parameters.PL_01TriggerTime)",
+											"type": "Expression"
+										},
+										"type": "Datetime"
+									},
+									"FilePath": {
+										"value": {
+											"value": "@CONCAT('Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Master', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(pipeline().parameters.SrcObject),\n'/'\n)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"TriggerId": {
+										"value": {
+											"value": "@pipeline().TriggerId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ActivityName": {
+										"value": "FullLoad Copy into Master",
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "add header into master file",
+							"type": "DatabricksNotebook",
+							"dependsOn": [
+								{
+									"activity": "FullLoad Copy into Master",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"notebookPath": "/Shared/Data Ingestion (Shared)/DI_03_Add_Schema_to_Parquet",
+								"baseParameters": {
+									"Container": {
+										"value": "@pipeline().parameters.FwkItem['SinkContainer']",
+										"type": "Expression"
+									},
+									"DDirectory": {
+										"value": "@concat('dbfs:/mnt/datadictionary/EDL_DataDict_','SG','_test.xlsx')",
+										"type": "Expression"
+									},
+									"Object": {
+										"value": "@toLower(split(pipeline().parameters.SrcObject,'.')[0])",
+										"type": "Expression"
+									},
+									"File_Path": {
+										"value": "@CONCAT('/Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Master', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(split(pipeline().parameters.SrcObject,'.')[0]),\n\t'.parquet'\n)",
+										"type": "Expression"
+									},
+									"Output_Path": {
+										"value": "@CONCAT('/Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Master', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(split(pipeline().parameters.SrcObject,'.')[0])\n)",
+										"type": "Expression"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_databricks",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"FwkItem": {
+				"type": "array"
+			},
+			"PL_01TriggerTime": {
+				"type": "string"
+			},
+			"FwkLogId": {
+				"type": "string"
+			},
+			"EntRunId": {
+				"type": "string"
+			},
+			"SrcPath": {
+				"type": "string"
+			},
+			"SrcObject": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"SrcCompObect": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "01 Ingestion Module/PL_15_FTP_CompMultiFile_Load_Adobe"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-09-20T04:54:36Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

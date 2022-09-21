@@ -1,0 +1,17 @@
+{
+	"name": "LS_adls",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": " ",
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://abcmfcadoedl01dsea.dfs.core.windows.net/",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiI3NjIzN2MxZC1kY2Q2LTQxM2UtOGM5MC03ODA0N2ZjNmYzNWEiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "integrationRuntime1",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

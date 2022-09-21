@@ -1,0 +1,154 @@
+{
+	"name": "PL_11_1_DataTransformation_DataFlow_test",
+	"properties": {
+		"activities": [
+			{
+				"name": "Data Transformation",
+				"description": "Evaluates the input value ‘SourceType’ corresponding to a case that matches the condition.",
+				"type": "Switch",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"on": {
+						"value": "@pipeline().parameters.FunctionName",
+						"type": "Expression"
+					},
+					"cases": [
+						{
+							"value": "LoadedDate",
+							"activities": [
+								{
+									"name": "DT_LoadedDate",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "DT1_UploadDate",
+											"type": "DataFlowReference",
+											"parameters": {
+												"FileTransformationName": {
+													"value": "'@{concat(pipeline().parameters.Output[0].FileTransformationName,'_',\nformatDateTime(if(equals(pipeline().parameters.DtLogId,NULL),pipeline().parameters.PL_11_TriggerTime,pipeline().parameters.LogOutputUpdateDate),'yyyy'),\nformatDateTime(if(equals(pipeline().parameters.DtLogId,NULL),pipeline().parameters.PL_11_TriggerTime,pipeline().parameters.LogOutputUpdateDate),'MM'),\nformatDateTime(if(equals(pipeline().parameters.DtLogId,NULL),pipeline().parameters.PL_11_TriggerTime,pipeline().parameters.LogOutputUpdateDate),'dd'),\nformatDateTime(if(equals(pipeline().parameters.DtLogId,NULL),pipeline().parameters.PL_11_TriggerTime,pipeline().parameters.LogOutputUpdateDate),'HH'),\nformatDateTime(if(equals(pipeline().parameters.DtLogId,NULL),pipeline().parameters.PL_11_TriggerTime,pipeline().parameters.LogOutputUpdateDate),'mm'))}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"SinkFile": {
+													"ConvertPath": {
+														"value": "@pipeline().parameters.SinkPath",
+														"type": "Expression"
+													}
+												}
+											}
+										},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "spu_DtDsOutputUpdate",
+				"description": "Update the column ‘OutputUpdateDate’ in the table table ‘DtDsOutput’ ",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Data Transformation",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[spu_DtDsOutputUpdate]",
+					"storedProcedureParameters": {
+						"DtDataSetId": {
+							"value": {
+								"value": "@if(equals(pipeline().parameters.DtLogId,NULL),pipeline().parameters.DtDataSetId,\nif(equals(split(pipeline().parameters.FlagUpdateOutputDate,';')[0],1),pipeline().parameters.DtDataSetId,NULL))\n",
+								"type": "Expression"
+							},
+							"type": "Int64"
+						},
+						"DtOutputId": {
+							"value": {
+								"value": "@if(equals(pipeline().parameters.DtLogId,NULL),pipeline().parameters.Output[0].DtOutputId,\nif(equals(split(pipeline().parameters.FlagUpdateOutputDate,';')[0],1),pipeline().parameters.Output[0].DtOutputId,NULL))\n",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"OutputUpdateDate": {
+							"value": {
+								"value": "@if(equals(pipeline().parameters.DtLogId,NULL),pipeline().parameters.PL_11_TriggerTime,\nif(equals(split(pipeline().parameters.FlagUpdateOutputDate,';')[0],1),pipeline().parameters.LogOutputUpdateDate,pipeline().parameters.PL_11_TriggerTime))\n",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"parameters": {
+			"FunctionName": {
+				"type": "string"
+			},
+			"SinkPath": {
+				"type": "string"
+			},
+			"Output": {
+				"type": "array"
+			},
+			"DtDataSetId": {
+				"type": "string"
+			},
+			"OutputPath": {
+				"type": "string"
+			},
+			"PL_11_TriggerTime": {
+				"type": "string"
+			},
+			"LogOutputUpdateDate": {
+				"type": "string"
+			},
+			"DtLogId": {
+				"type": "string"
+			},
+			"FlagUpdateOutputDate": {
+				"type": "string"
+			},
+			"FwkItem": {
+				"type": "object"
+			}
+		},
+		"folder": {
+			"name": "03 test Data Transformation Module"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-04-25T07:17:53Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

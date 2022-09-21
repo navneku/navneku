@@ -1,0 +1,25 @@
+{
+	"name": "DS_ORACLE_Investigation",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Oracle",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FwkItem": {
+				"type": "array"
+			}
+		},
+		"folder": {
+			"name": "ProjTeam"
+		},
+		"annotations": [],
+		"type": "OracleTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "CAS",
+			"table": "TKH_POLICY_BK"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

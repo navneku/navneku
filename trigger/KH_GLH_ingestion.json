@@ -1,0 +1,25 @@
+{
+	"name": "KH_GLH_ingestion",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 10,
+				"startTime": "2022-08-18T17:15:00",
+				"endTime": "2022-08-18T17:55:00",
+				"timeZone": "SE Asia Standard Time"
+			}
+		}
+	}
+}

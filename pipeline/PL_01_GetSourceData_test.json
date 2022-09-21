@@ -1,0 +1,600 @@
+{
+	"name": "PL_01_GetSourceData_test",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookupFwkConfig",
+				"description": "Executes the SP ‘sps_LookupFwkConfig’ to get the source information of the files to be ingested.",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[dbo].[sps_LookupFwkTrigger1]",
+						"storedProcedureParameters": {
+							"AdfName": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().DataFactory",
+									"type": "Expression"
+								}
+							},
+							"BatchGroupId": {
+								"type": "Int32",
+								"value": {
+									"value": "@pipeline().parameters.BatchGroupId",
+									"type": "Expression"
+								}
+							},
+							"TriggerName": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().parameters.TriggerName",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLSYN_Configuration",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachObject",
+				"description": "Iterates over a dataset and loop by number of rows it gets with the output from ‘LookupFwkConfig’ activity.",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookupFwkLog",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@array(activity('LookupFwkConfig').output.value)",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "Switch_SourceType",
+							"description": "Evaluates the input value ‘SourceType’ corresponding to a case that matches the condition.",
+							"type": "Switch",
+							"dependsOn": [
+								{
+									"activity": "InsertIntoDtFwkLog",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"on": {
+									"value": "@string(item().SourceType)",
+									"type": "Expression"
+								},
+								"cases": [
+									{
+										"value": "PSQL",
+										"activities": [
+											{
+												"name": "Execute PL_15_PostgreSQLFullLoad",
+												"type": "ExecutePipeline",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "PL_15_PostgreSQLFullLoad_test",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"FwkItem": {
+															"value": "@item()",
+															"type": "Expression"
+														},
+														"PL_01TriggerTime": {
+															"value": "@convertFromUtc(formatdatetime(pipeline().TriggerTime),activity('LookupFwkConfig').output.value[0]['TimezoneName'])",
+															"type": "Expression"
+														},
+														"FwkLogId": {
+															"value": "@activity('LookupFwkLog').output.firstrow.FwkLogId",
+															"type": "Expression"
+														},
+														"EntRunId": {
+															"value": "@pipeline().parameters.EntRunId",
+															"type": "Expression"
+														},
+														"SrcPath": {
+															"value": "@item().SrcPath",
+															"type": "Expression"
+														},
+														"SrcObject": {
+															"value": "@item().SrcObject",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
+									},
+									{
+										"value": "SYN",
+										"activities": [
+											{
+												"name": "Execute PL_16_SYNDeltaLoad",
+												"description": "Invokes the ‘PL_16_SYNDeltaLoad’ pipeline and send all the parameters returned by ‘LookupFwkLog’ and ‘LookupFwkConfig’.",
+												"type": "ExecutePipeline",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "PL_16_SYNDeltaLoad_test",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"FwkItem": {
+															"value": "@item()",
+															"type": "Expression"
+														},
+														"PL_01TriggerTime": {
+															"value": "@pipeline().TriggerTime",
+															"type": "Expression"
+														},
+														"FwkLogId": {
+															"value": "@activity('LookupFwkLog').output.firstrow.FwkLogId",
+															"type": "Expression"
+														},
+														"EntRunId": {
+															"value": "@pipeline().parameters.EntRunId",
+															"type": "Expression"
+														},
+														"SrcPath": {
+															"value": "@item().SrcPath",
+															"type": "Expression"
+														},
+														"SrcObject": {
+															"value": "@item().SrcObject",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
+									}
+								]
+							}
+						},
+						{
+							"name": "sp_UpdateExecutionLogS_copy1",
+							"description": "Executes the SP spu_FwkLogUpdate to update the record created by the ‘InsertIntoFwkLog’ activity in the table ‘FwkLog’ by updating the columns ‘PipelineStatus’ to ‘Success’.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Switch_SourceType",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_FwkLogUpdate_segregation_test]",
+								"storedProcedureParameters": {
+									"PipelineStatus": {
+										"value": {
+											"value": "Success",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ModuleRunId": {
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"FwkConfigId": {
+										"value": {
+											"value": "@item().FwkConfigId",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "sp_UpdateExecutionLogF_copy1",
+							"description": "Executes the SP spu_FwkLogUpdate to update the record created by the ‘InsertIntoFwkLog’ activity in the table ‘FwkLog’ by updating the columns ‘PipelineStatus’ to ‘Failed’.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Switch_SourceType",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_FwkLogUpdate_segregation_test]",
+								"storedProcedureParameters": {
+									"PipelineStatus": {
+										"value": {
+											"value": "Failed",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"ModuleRunId": {
+										"value": {
+											"value": "@pipeline().RunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"FwkConfigId": {
+										"value": {
+											"value": "@item().FwkConfigId",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "Execute Data Transformation Module",
+							"description": "This pipeline is used to execute all the inner activities that are included in the data validation module.",
+							"type": "ExecutePipeline",
+							"dependsOn": [
+								{
+									"activity": "sp_UpdateDtFwkLogF",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "sp_UpdateDtFwkLogS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "PL_11_DataTransformation_test",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"EntRunId": {
+										"value": "@pipeline().parameters.EntRunId",
+										"type": "Expression"
+									},
+									"TriggerName": {
+										"value": "@pipeline().parameters.TriggerName",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "InsertIntoDtFwkLog",
+							"description": "Executes the SP spi_FwkLogInsert to insert record into FwkLog table with the execution module information by pipeline id and with null status.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spi_Dt_FwkLogInsert_segregation_test]",
+								"storedProcedureParameters": {
+									"EntRunId": {
+										"value": {
+											"value": "@pipeline().parameters.EntRunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SourceFwkConfigID": {
+										"value": {
+											"value": "@item().FwkConfigId",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "sp_UpdateDtFwkLogS",
+							"description": "Executes the SP spu_FwkLogUpdate to update the record created by the ‘InsertIntoFwkLog’ activity in the table ‘FwkLog’ by updating the columns ‘PipelineStatus’ to ‘Success’.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "sp_UpdateExecutionLogS_copy1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_Dt_FwkLogUpdate_segregation_test]",
+								"storedProcedureParameters": {
+									"EntRunID": {
+										"value": {
+											"value": "@pipeline().parameters.EntRunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"PipelineStatus": {
+										"value": {
+											"value": "Success",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SourceFwkConfigID": {
+										"value": {
+											"value": "@item().FwkConfigId",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "sp_UpdateDtFwkLogF",
+							"description": "Executes the SP spu_FwkLogUpdate to update the record created by the ‘InsertIntoFwkLog’ activity in the table ‘FwkLog’ by updating the columns ‘PipelineStatus’ to ‘Success’.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "sp_UpdateExecutionLogF_copy1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_Dt_FwkLogUpdate_segregation_test]",
+								"storedProcedureParameters": {
+									"EntRunID": {
+										"value": {
+											"value": "@pipeline().parameters.EntRunId",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"PipelineStatus": {
+										"value": {
+											"value": "Failed",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SourceFwkConfigID": {
+										"value": {
+											"value": "@item().FwkConfigId",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "InsertIntoFwkLog",
+				"description": "Executes the SP spi_FwkLogInsert to insert record into FwkLog table with the execution module information by pipeline id and with null status.",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "LookupFwkConfig",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[spi_FwkLogInsert_segregation_test]",
+					"storedProcedureParameters": {
+						"ModuleRunId": {
+							"value": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"PipelineTriggerDT": {
+							"value": {
+								"value": "@convertFromUtc(formatdatetime(pipeline().TriggerTime),activity('LookupFwkConfig').output.value[0]['TimezoneName'])",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"TriggerId": {
+							"value": {
+								"value": "@pipeline().TriggerId",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"Module": {
+							"value": {
+								"value": "Ingestion",
+								"type": "Expression"
+							},
+							"type": "String"
+						},
+						"StartDate": {
+							"value": {
+								"value": "@convertFromUtc(formatdatetime(pipeline().TriggerTime),activity('LookupFwkConfig').output.value[0]['TimezoneName'])",
+								"type": "Expression"
+							},
+							"type": "Datetime"
+						},
+						"EntRunId": {
+							"value": {
+								"value": "@pipeline().parameters.EntRunId",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "LS_SYN",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "LookupFwkLog",
+				"description": "Executes the SP ‘sps_LookupFwkLog’ to read and returned to the ADF the last FwkRunId of the current execution.",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "InsertIntoFwkLog",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[dbo].[sps_LookupFwkLog_segregation_test]",
+						"storedProcedureParameters": {
+							"ModuleRunId": {
+								"type": "String",
+								"value": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								}
+							}
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SQLSYN_Configuration",
+						"type": "DatasetReference"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"EntRunId": {
+				"type": "string"
+			},
+			"TriggerName": {
+				"type": "string"
+			},
+			"BatchGroupId": {
+				"type": "int"
+			}
+		},
+		"folder": {
+			"name": "01_test_IngestionModule"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-06-16T14:52:05Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

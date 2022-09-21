@@ -1,0 +1,219 @@
+{
+	"name": "Investigation_CountrySpecific_Char",
+	"properties": {
+		"activities": [
+			{
+				"name": "If is FullLoad",
+				"description": "Evaluates the ‘LoadType’ and go in case it matches.",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(pipeline().parameters.FwkItem['TypeLoad'], 1)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "FullLoad Copy into Landing",
+							"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "OracleSource",
+									"additionalColumns": [
+										{
+											"name": "LastUpdate",
+											"value": {
+												"value": "@formatDateTime(pipeline().parameters.PL_01TriggerTime)",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "CreatedBy",
+											"value": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											}
+										}
+									],
+									"partitionOption": "None",
+									"queryTimeout": "02:00:00"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings",
+										"maxConcurrentConnections": {
+											"value": "@pipeline().parameters.FwkItem['MaxConcurrency']",
+											"type": "Expression"
+										},
+										"blockSizeInMB": {
+											"value": "@pipeline().parameters.FwkItem['BlockSize']",
+											"type": "Expression"
+										}
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"parallelCopies": {
+									"value": "@pipeline().parameters.FwkItem['DegreeOfParallelism']",
+									"type": "Expression"
+								},
+								"validateDataConsistency": true
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ORACLE",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": "@pipeline().parameters.FwkItem"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Raw', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(pipeline().parameters.SrcObject),\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))), \n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(pipeline().parameters.SrcObject),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH'),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'mm'),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "FullLoad Copy into Published",
+							"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "FullLoad Copy into Landing",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": true
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_GET",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Raw', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(pipeline().parameters.SrcObject),\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))), \n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(pipeline().parameters.SrcObject),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH'),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'mm'),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Published', \n'/', pipeline().parameters.FwkItem['CountryId'],\n'/Full', \n'/', pipeline().parameters.FwkItem['SystemName'],\n'/', toUpper(pipeline().parameters.SrcObject),\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))), \n'/', toUpper(pipeline().parameters.FwkItem['SchemaName']),\n'_', toUpper(pipeline().parameters.SrcObject),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH'),\n'_', formatDateTime(pipeline().parameters.PL_01TriggerTime,'mm'),\n\t'.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"FwkItem": {
+				"type": "array"
+			},
+			"PL_01TriggerTime": {
+				"type": "string"
+			},
+			"FwkLogId": {
+				"type": "string"
+			},
+			"EntRunId": {
+				"type": "string"
+			},
+			"SrcPath": {
+				"type": "string"
+			},
+			"SrcObject": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ProjTeam_POC"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-08-25T08:39:33Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

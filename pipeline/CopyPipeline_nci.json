@@ -1,0 +1,127 @@
+{
+	"name": "CopyPipeline_nci",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy_nci",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "Source",
+						"value": "dev/Published/KH/Full/EDB/TAIS_FILTER/2022/06/28/18/CAS_TAIS_FILTER_2022_06_28_18_00.parquet"
+					},
+					{
+						"name": "Destination",
+						"value": ".Azure Data Lake Storage Gen2 file"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "ParquetSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						}
+					},
+					"sink": {
+						"type": "SqlDWSink",
+						"writeBehavior": "Insert",
+						"tableOption": "autoCreate"
+					},
+					"enableStaging": false,
+					"parallelCopies": 10,
+					"validateDataConsistency": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "ruleset_nm",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ruleset_nm",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "fltr_lvl",
+									"type": "String"
+								},
+								"sink": {
+									"name": "fltr_lvl",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "id",
+									"type": "String"
+								},
+								"sink": {
+									"name": "id",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "fltr_nm",
+									"type": "String"
+								},
+								"sink": {
+									"name": "fltr_nm",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "LastUpdate",
+									"type": "String"
+								},
+								"sink": {
+									"name": "LastUpdate",
+									"type": "String"
+								}
+							},
+							{
+								"source": {
+									"name": "CreatedBy",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CreatedBy",
+									"type": "String"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "SourceDataset_nci",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DestinationDataset_nci",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-07-04T06:35:20Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,36 @@
+{
+	"name": "DS_ORACLE_Investigation2",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Oracle",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"schema": {
+				"type": "string",
+				"defaultValue": "AMS"
+			},
+			"tablename": {
+				"type": "string",
+				"defaultValue": "TUSER_PROFILES_BK"
+			}
+		},
+		"folder": {
+			"name": "ProjTeam"
+		},
+		"annotations": [],
+		"type": "OracleTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().tablename",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

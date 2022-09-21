@@ -1,0 +1,659 @@
+{
+	"name": "PL_16_SYNDeltaLoad",
+	"properties": {
+		"description": "Delta Load from Synapse SQL DB",
+		"activities": [
+			{
+				"name": "If WmkDataType INT",
+				"description": "Evaluates the ‘TypeLoad’ and ‘WmkDataType’ parameters and goes into each case if matches.",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(pipeline().parameters.FwkItem['WmkDataType'], int('1'))",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "LookupMaxValueSrcDate",
+							"description": "Executes a query to get the ‘OldWatermarkvalueDT’ from the table ‘FwkWatermark’.",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "spi_NewRowstoWmkDT",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderQuery": {
+										"value": "SELECT MAX(@{pipeline().parameters.FwkItem['WmkColumnName']}) as OldWatermarkvalueDT from [@{pipeline().parameters.FwkItem['SchemaName']}].[@{pipeline().parameters.FwkItem['SrcObject']}]",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SYN",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@pipeline().parameters.FwkItem['SchemaName']",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										}
+									}
+								},
+								"firstRowOnly": true
+							}
+						},
+						{
+							"name": "Delta Copy into Landing - Date",
+							"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "LookupMaxValueSrcDate",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "LookupOldWmkConfig",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderQuery": {
+										"value": "SELECT * FROM [@{pipeline().parameters.FwkItem['SchemaName']}].[@{pipeline().parameters.FwkItem['SrcObject']}] \nWHERE @{pipeline().parameters.FwkItem['WmkColumnName']} > '@{convertToUtc(activity('LookupOldWmkConfig').output.firstrow.NewValueWatermark,'UTC','yyyy-MM-ddTHH:mm:ss')}'\nAND @{pipeline().parameters.FwkItem['TypeLoad']} = 0",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_SYN",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@pipeline().parameters.FwkItem['SchemaName']",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Landing', \n'/', pipeline().parameters.FwkItem['SourceType'], \n'/', pipeline().parameters.FwkItem['DatabaseName'], \n'/', pipeline().parameters.FwkItem['SchemaName'], \n'/', pipeline().parameters.SrcObject,\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))), \n'/', pipeline().parameters.SrcObject,\n'_',\n\tformatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\tformatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'),\n\tformatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'),\n\tformatDateTime(pipeline().parameters.PL_01TriggerTime,'HH'),\n\tformatDateTime(pipeline().parameters.PL_01TriggerTime,'mm'),\n\t'.snappy.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "spi_NewRowstoWmkDT",
+							"description": "Executes the SP ‘spi_FwkWatermarkInsert’ to create a new record in the table ‘FwkWatermark’ inserts depend on the SrcObjectChild value",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spi_FwkWatermarkInsert]",
+								"storedProcedureParameters": {
+									"FwkConfigId": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['FwkConfigId']",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"SrcObjectChild": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"WmkDataType": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['WmkDataType']",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"SrcObject": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "spu_UpdateWmkDate",
+							"description": "Executes the SP ‘spu_FwkWatermarkIntUpdate’ to Update the watermark value for objects using watermark datatype \"1\"",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Delta Copy into Landing - Date",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_FwkWatermarkDtUpdate]",
+								"storedProcedureParameters": {
+									"LastModifiedTime": {
+										"value": {
+											"value": "@convertToUtc(pipeline().parameters.PL_01TriggerTime,'UTC','yyyy-MM-ddTHH:mm:ss')",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"SrcObjectChild": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"OldValueWmkDt": {
+										"value": {
+											"value": "@convertToUtc(\n    activity('LookupMaxValueSrcDate').output.firstRow.OldWatermarkvalueDT,\n    'UTC',\n    'yyyy-MM-ddTHH:mm:ss'\n)",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"FwkConfigId": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['FwkConfigId']",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"ConvertPath": {
+										"value": {
+											"value": "@CONCAT('Converted', \n'/', pipeline().parameters.FwkItem['SourceType'], \n'/', pipeline().parameters.FwkItem['DatabaseName'], \n'/', pipeline().parameters.FwkItem['SchemaName'], \n'/', pipeline().parameters.SrcObject,\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))),\n'/'\n)",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "LookupOldWmkConfig",
+							"description": "Executes the SP ‘sps_LookupFwkWatermark’ to retrieve the information from the table  ‘FwkWatermark’ by SrcObjectChild and FwkTriggerId.",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "spi_NewRowstoWmkDT",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderStoredProcedureName": "[dbo].[sps_LookupFwkWatermark]",
+									"storedProcedureParameters": {
+										"SrcObjectChild": {
+											"type": "String",
+											"value": {
+												"value": "@pipeline().parameters.FwkItem['SrcObject']",
+												"type": "Expression"
+											}
+										},
+										"FwkTriggerId": {
+											"type": "String",
+											"value": {
+												"value": "@pipeline().parameters.FwkItem['FwkTriggerId']",
+												"type": "Expression"
+											}
+										}
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SYN",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@pipeline().parameters.FwkItem['SchemaName']",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										}
+									}
+								},
+								"firstRowOnly": true
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "LookupNewWmkSrc",
+							"description": "Executes a query to the ‘FwkWatermark’ table  to get the ‘NewWatermarkValue’ column value.",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "spi_NewRowstoWmkInt",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderQuery": {
+										"value": "SELECT MAX(@{pipeline().parameters.FwkItem['WmkColumnName']}) as NewWatermarkValue from [@{pipeline().parameters.FwkItem['SchemaName']}].[@{pipeline().parameters.FwkItem['SrcObject']}]",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SYN",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@pipeline().parameters.FwkItem['SchemaName']",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										}
+									}
+								},
+								"firstRowOnly": true
+							}
+						},
+						{
+							"name": "Delta Copy into Landing - Integer",
+							"description": "Copy a table from a database to the configurated Sink dynamically taking by input FwkItem, SrcPath.",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "LookupNewWmkSrc",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "LookupOldWmkConfig_Int",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderQuery": {
+										"value": "SELECT * FROM [@{pipeline().parameters.FwkItem['SchemaName']}].[@{pipeline().parameters.FwkItem['SrcObject']}]\nWHERE @{pipeline().parameters.FwkItem['WmkColumnName']} > isnull('@{activity('LookupOldWmkConfig_Int').output.firstRow.NewValueWatermark}' ,0)",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"validateDataConsistency": true
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_SYN",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@pipeline().parameters.FwkItem['SchemaName']",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_PRQ_Sink",
+									"type": "DatasetReference",
+									"parameters": {
+										"FwkItem": {
+											"value": "@pipeline().parameters.FwkItem",
+											"type": "Expression"
+										},
+										"pipelineTriggerTime": {
+											"value": "@pipeline().parameters.PL_01TriggerTime",
+											"type": "Expression"
+										},
+										"FullPath": {
+											"value": "@CONCAT('Landing', \n'/', pipeline().parameters.FwkItem['SourceType'], \n'/', pipeline().parameters.FwkItem['DatabaseName'], \n'/', pipeline().parameters.FwkItem['SchemaName'], \n'/', pipeline().parameters.SrcObject,\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))), \n'/', pipeline().parameters.SrcObject,\n'_',\n\tformatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\tformatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'),\n\tformatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'),\n\tformatDateTime(pipeline().parameters.PL_01TriggerTime,'HH'),\n\tformatDateTime(pipeline().parameters.PL_01TriggerTime,'mm'),\n\t'.snappy.parquet'\n)",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "spu_UpdateWmkInt",
+							"description": "Executes the SP ‘spu_FwkWatermarkIntUpdate’ to Update the watermark value for objects using watermark datatype \"1\"",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Delta Copy into Landing - Integer",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spu_FwkWatermarkIntUpdate]",
+								"storedProcedureParameters": {
+									"NewValueWmkInt": {
+										"value": {
+											"value": "@activity('LookupNewWmkSrc').output.firstRow.NewWatermarkValue",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"SrcObjectChild": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"FwkConfigId": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['FwkConfigId']",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"ConvertPath": {
+										"value": {
+											"value": "@CONCAT('Converted', \n'/', pipeline().parameters.FwkItem['SourceType'], \n'/', pipeline().parameters.FwkItem['DatabaseName'], \n'/', pipeline().parameters.FwkItem['SchemaName'], \n'/', pipeline().parameters.SrcObject,\n'/', if(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'YY'), formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'),\n\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'MM'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM')),\n\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'DD'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd')),\n\t\t\t\tif(equals(pipeline().parameters.FwkItem['SinkPathGranularity'],'HH'), CONCAT(formatDateTime(pipeline().parameters.PL_01TriggerTime,'yyyy'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'MM'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'dd'), '/', formatDateTime(pipeline().parameters.PL_01TriggerTime,'HH')), '')))),\n'/'\n)",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "spi_NewRowstoWmkInt",
+							"description": "Executes the SP ‘spi_FwkWatermarkInsert’ to create watermark for the source object.",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "dbo.spi_FwkWatermarkInsert",
+								"storedProcedureParameters": {
+									"FwkConfigId": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['FwkConfigId']",
+											"type": "Expression"
+										},
+										"type": "Int64"
+									},
+									"SrcObjectChild": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									},
+									"WmkDataType": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['WmkDataType']",
+											"type": "Expression"
+										},
+										"type": "Int32"
+									},
+									"SrcObject": {
+										"value": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "LS_SYN",
+								"type": "LinkedServiceReference"
+							}
+						},
+						{
+							"name": "LookupOldWmkConfig_Int",
+							"description": "Executes the SP ‘sps_LookupFwkWatermark’ to retrieve the information from the table  ‘FwkWatermark’ by SrcObjectChild and FwkTriggerId.",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "spi_NewRowstoWmkInt",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderStoredProcedureName": "[dbo].[sps_LookupFwkWatermark]",
+									"storedProcedureParameters": {
+										"SrcObjectChild": {
+											"type": "String",
+											"value": {
+												"value": "@pipeline().parameters.FwkItem['SrcObject']",
+												"type": "Expression"
+											}
+										},
+										"FwkTriggerId": {
+											"type": "String",
+											"value": {
+												"value": "@pipeline().parameters.FwkItem['FwkTriggerId']",
+												"type": "Expression"
+											}
+										}
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SYN",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@pipeline().parameters.FwkItem['SchemaName']",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@pipeline().parameters.FwkItem['SrcObject']",
+											"type": "Expression"
+										}
+									}
+								},
+								"firstRowOnly": true
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"FwkItem": {
+				"type": "array"
+			},
+			"PL_01TriggerTime": {
+				"type": "string"
+			},
+			"FwkLogId": {
+				"type": "string"
+			},
+			"EntRunId": {
+				"type": "string"
+			},
+			"SrcPath": {
+				"type": "string"
+			},
+			"SrcObject": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "01 Ingestion Module"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-03-11T15:42:59Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

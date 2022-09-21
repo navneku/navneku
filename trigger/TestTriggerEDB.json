@@ -1,0 +1,38 @@
+{
+	"name": "TestTriggerEDB",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus",
+					"type": "PipelineReference"
+				}
+			},
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus_copy1",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2022-07-01T07:00:58",
+				"timeZone": "SE Asia Standard Time",
+				"schedule": {
+					"minutes": [
+						41
+					],
+					"hours": [
+						13
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,1887 @@
+{
+	"name": "ad-hoc-copy-tcas-tpolicys-param",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "OdbcSource",
+						"queryTimeout": "02:00:00"
+					},
+					"sink": {
+						"type": "SqlDWSink"
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "tpolicys.medic_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "MEDIC_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.incmplt_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "INCMPLT_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pend_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PEND_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.subj_to_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "SUBJ_TO_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.uwg_clas",
+									"type": "String"
+								},
+								"sink": {
+									"name": "UWG_CLAS",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.fran_num",
+									"type": "String"
+								},
+								"sink": {
+									"name": "FRAN_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.agt_code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "AGT_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nfo_opt",
+									"type": "String"
+								},
+								"sink": {
+									"name": "NFO_OPT",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nfo_eff_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "NFO_EFF_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.zap_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ZAP_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.aea_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "AEA_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.lnb_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "LNB_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.hiv_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "HIV_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pol_rmrk",
+									"type": "String"
+								},
+								"sink": {
+									"name": "POL_RMRK",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.apl_laps_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "APL_LAPS_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pc_typ",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PC_TYP",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pc_recv_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "PC_RECV_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pc_pend_reasn",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PC_PEND_REASN",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pc_efft_date",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "PC_EFFT_DATE",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.apl_ext_days",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "APL_EXT_DAYS",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nyr_mode_prem",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "NYR_MODE_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nyr_dscnt_prem",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "NYR_DSCNT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.renw_yr",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "RENW_YR",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.run_num",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "RUN_NUM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 2
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pol_app_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "POL_APP_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.tlia_code_1",
+									"type": "String"
+								},
+								"sink": {
+									"name": "TLIA_CODE_1",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.tlia_code_2",
+									"type": "String"
+								},
+								"sink": {
+									"name": "TLIA_CODE_2",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.tlia_code_3",
+									"type": "String"
+								},
+								"sink": {
+									"name": "TLIA_CODE_3",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.disab_clas",
+									"type": "String"
+								},
+								"sink": {
+									"name": "DISAB_CLAS",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.endow_ctl",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ENDOW_CTL",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.own_ins_rel",
+									"type": "String"
+								},
+								"sink": {
+									"name": "OWN_INS_REL",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.bancas_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "BANCAS_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.frst_iss_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "FRST_ISS_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ipa_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "IPA_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.rgl_top_up",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "RGL_TOP_UP",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.proc_fee_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PROC_FEE_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.recurr_bill_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "RECURR_BILL_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.recurr_bill_st_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "RECURR_BILL_ST_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.fnd_switch_ctr",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "FND_SWITCH_CTR",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.fnd_wthdr_ctr",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "FND_WTHDR_CTR",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.mvy_ded_to_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "MVY_DED_TO_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.lst_fnd_valn_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "LST_FND_VALN_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.corridor_pct",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "CORRIDOR_PCT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nb_update_date",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "NB_UPDATE_DATE",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pickup_debit_day",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "PICKUP_DEBIT_DAY",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 2
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pickup_eff_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "PICKUP_EFF_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nxt_rebal_date",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "NXT_REBAL_DATE",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.dth_susp",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "DTH_SUSP",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.curr_debit_day",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "CURR_DEBIT_DAY",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 2
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nxt_debit_day",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "NXT_DEBIT_DAY",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 2
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nxt_pac_eff_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "NXT_PAC_EFF_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.iio_opt",
+									"type": "String"
+								},
+								"sink": {
+									"name": "IIO_OPT",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.iio_pct",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "IIO_PCT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 3
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.special_clas",
+									"type": "String"
+								},
+								"sink": {
+									"name": "SPECIAL_CLAS",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.occ_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "OCC_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.insrd_mort",
+									"type": "String"
+								},
+								"sink": {
+									"name": "INSRD_MORT",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.bnh_code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "BNH_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.reins_mthd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "REINS_MTHD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.reins_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "REINS_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.restrict_cd_1",
+									"type": "String"
+								},
+								"sink": {
+									"name": "RESTRICT_CD_1",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.restrict_cd_2",
+									"type": "String"
+								},
+								"sink": {
+									"name": "RESTRICT_CD_2",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.restrict_cd_3",
+									"type": "String"
+								},
+								"sink": {
+									"name": "RESTRICT_CD_3",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.open_flag",
+									"type": "String"
+								},
+								"sink": {
+									"name": "OPEN_FLAG",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.no_lapse_gurt_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "NO_LAPSE_GURT_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.disable_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "DISABLE_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.wrk_area",
+									"type": "String"
+								},
+								"sink": {
+									"name": "WRK_AREA",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pol_clm_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "POL_CLM_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.autopay_susp_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "AUTOPAY_SUSP_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.frez_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "FREZ_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.orig_plan_prem",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "ORIG_PLAN_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.waive_to_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "WAIVE_TO_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.loyal_bns_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "LOYAL_BNS_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ph_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PH_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ph_strt_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "PH_STRT_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ph_end_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "PH_END_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ph_eff_typ",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PH_EFF_TYP",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ph_pd_to_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "PH_PD_TO_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ph_last_pd_to_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "PH_LAST_PD_TO_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ph_autopay_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PH_AUTOPAY_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pol_num",
+									"type": "String"
+								},
+								"sink": {
+									"name": "POL_NUM",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.div_opt",
+									"type": "String"
+								},
+								"sink": {
+									"name": "DIV_OPT",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.terr_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "TERR_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.dscnt_prem",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "DSCNT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pol_susp",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "POL_SUSP",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pmt_susp",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "PMT_SUSP",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ipo_last_refu_yr",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "IPO_LAST_REFU_YR",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 4
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pmt_mode",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PMT_MODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.bill_prem",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "BILL_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.bill_to_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "BILL_TO_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pac_loan_repy",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "PAC_LOAN_REPY",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pac_bk_ctr",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PAC_BK_CTR",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pac_eff_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "PAC_EFF_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.medic_code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "MEDIC_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.tot_prem_appy",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "TOT_PREM_APPY",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 15
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.prefix_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PREFIX_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.oth_rqmts_text",
+									"type": "String"
+								},
+								"sink": {
+									"name": "OTH_RQMTS_TEXT",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.mort_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "MORT_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.chg_insrd_opt",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CHG_INSRD_OPT",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.convrt_fr_pol",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CONVRT_FR_POL",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.apl_lapse_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "APL_LAPSE_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.div_upto_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "DIV_UPTO_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.sa_cd_2",
+									"type": "String"
+								},
+								"sink": {
+									"name": "SA_CD_2",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.wa_cd_1",
+									"type": "String"
+								},
+								"sink": {
+									"name": "WA_CD_1",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.wa_cd_2",
+									"type": "String"
+								},
+								"sink": {
+									"name": "WA_CD_2",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.vp_point",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "VP_POINT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.override_bill_day",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "OVERRIDE_BILL_DAY",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 2
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.plan_code_base",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PLAN_CODE_BASE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.vers_num_base",
+									"type": "String"
+								},
+								"sink": {
+									"name": "VERS_NUM_BASE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.plan_prem",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "PLAN_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.db_opt",
+									"type": "String"
+								},
+								"sink": {
+									"name": "DB_OPT",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ins_typ_base",
+									"type": "String"
+								},
+								"sink": {
+									"name": "INS_TYP_BASE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pric_rsrv_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "PRIC_RSRV_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.rebal_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "REBAL_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.mode_prem",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "MODE_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ovr_loan_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "OVR_LOAN_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.frez_code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "FREZ_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ipo_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "IPO_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.vp_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "VP_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.reins_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "REINS_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.bill_mthd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "BILL_MTHD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.crcy_code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "CRCY_CODE",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.last_avy_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "LAST_AVY_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.last_pd_to_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "LAST_PD_TO_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pd_to_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "PD_TO_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pol_eff_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "POL_EFF_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pol_iss_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "POL_ISS_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pol_reiss_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "POL_REISS_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.cnfrm_acpt_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "CNFRM_ACPT_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pol_rlse_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "POL_RLSE_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.sbmt_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "SBMT_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pol_stat_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "POL_STAT_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.state_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "STATE_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.pol_trmn_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "POL_TRMN_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ais_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "AIS_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.admin_rule_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ADMIN_RULE_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.restr_case_cnt_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "RESTR_CASE_CNT_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.comm_wthld_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "COMM_WTHLD_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nb_user_id",
+									"type": "String"
+								},
+								"sink": {
+									"name": "NB_USER_ID",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.last_actv_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "LAST_ACTV_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.joint_cli_dth_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "JOINT_CLI_DTH_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.comprop_prem",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "COMPROP_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.resv_dnr_amt",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "RESV_DNR_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.xcpt_bill_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "XCPT_BILL_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nb_pc_pol_tot",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "NB_PC_POL_TOT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 0,
+									"precision": 9
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.cnfrm_prt_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "CNFRM_PRT_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.os_anty_susp",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "OS_ANTY_SUSP",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 13
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.payo_mthd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "PAYO_MTHD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.anty_stat_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "ANTY_STAT_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nxt_eff_mode_prem",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "NXT_EFF_MODE_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nxt_eff_dscnt_prem",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "NXT_EFF_DSCNT_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nxt_eff_prem_dt",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "NXT_EFF_PREM_DT",
+									"type": "DateTime",
+									"physicalType": "date"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.ctr_prem",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "CTR_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.nxt_eff_ctr_prem",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "NXT_EFF_CTR_PREM",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.lump_sum_ind",
+									"type": "String"
+								},
+								"sink": {
+									"name": "LUMP_SUM_IND",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.lump_sum_pmt_amt",
+									"type": "Decimal"
+								},
+								"sink": {
+									"name": "LUMP_SUM_PMT_AMT",
+									"type": "Decimal",
+									"physicalType": "decimal",
+									"scale": 2,
+									"precision": 11
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.vpo_opt",
+									"type": "String"
+								},
+								"sink": {
+									"name": "VPO_OPT",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							},
+							{
+								"source": {
+									"name": "tpolicys.dist_chnl_cd",
+									"type": "String"
+								},
+								"sink": {
+									"name": "DIST_CHNL_CD",
+									"type": "String",
+									"physicalType": "nvarchar"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_ODBC_VC_Ad_Hoc_Param_based",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.sch_name_edl",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.tbl_name_edl",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": {
+								"value": "@pipeline().parameters.sch_name_syn",
+								"type": "Expression"
+							},
+							"tbl_name": {
+								"value": "@pipeline().parameters.tbl_name_syn",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"sch_name_edl": {
+				"type": "string"
+			},
+			"tbl_name_edl": {
+				"type": "string"
+			},
+			"sch_name_syn": {
+				"type": "string"
+			},
+			"tbl_name_syn": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "Ad-Hoc-Copy"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-11-15T09:36:19Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,31 @@
+{
+	"name": "DI_01_XMLToParquet",
+	"properties": {
+		"folder": {
+			"name": "01 Data Ingestion"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "LS_adls_sinkDF",
+						"type": "LinkedServiceReference"
+					},
+					"name": "XMLSource"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_adls_sinkDF",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ParquetSink"
+				}
+			],
+			"transformations": [],
+			"script": "parameters{\n\tLandingPath as string,\n\tSinkPath as string\n}\nsource(allowSchemaDrift: true,\n\tvalidateSchema: true,\n\tignoreNoFilesFound: false,\n\tformat: 'xml',\n\tfileSystem: 'sink',\n\tvalidationMode: 'none',\n\tnamespaces: true,\n\twildcardPaths:[($LandingPath)]) ~> XMLSource\nXMLSource sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tformat: 'parquet',\n\tfileSystem: 'sink',\n\tfolderPath: ($SinkPath),\n\tcompressionCodec: 'snappy',\n\tumask: 0022,\n\tpreCommands: [],\n\tpostCommands: [],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> ParquetSink"
+		}
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"name": "DS_oracle_perfops",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_Oracle",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Perfops"
+		},
+		"annotations": [],
+		"type": "OracleTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "GLH",
+			"table": "TWRK_GLHPOLSUMRY02KH"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

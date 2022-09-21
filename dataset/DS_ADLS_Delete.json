@@ -1,0 +1,117 @@
+{
+	"name": "DS_ADLS_Delete",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_adls_sinkHost",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FwkItem": {
+				"type": "string"
+			},
+			"FullPath": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "01 Ingestion Module DS"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "Raw/KH/Full/EDB/V_CAS_OCDM_C_ACCOUNT",
+				"fileSystem": "dev"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "integrationkey",
+				"type": "UTF8"
+			},
+			{
+				"name": "externalid",
+				"type": "UTF8"
+			},
+			{
+				"name": "sourcesystem",
+				"type": "UTF8"
+			},
+			{
+				"name": "recordtypeid",
+				"type": "UTF8"
+			},
+			{
+				"name": "fatcaindicator",
+				"type": "UTF8"
+			},
+			{
+				"name": "gender",
+				"type": "UTF8"
+			},
+			{
+				"name": "occupation",
+				"type": "UTF8"
+			},
+			{
+				"name": "nationality",
+				"type": "UTF8"
+			},
+			{
+				"name": "personotherphone",
+				"type": "UTF8"
+			},
+			{
+				"name": "personemail",
+				"type": "UTF8"
+			},
+			{
+				"name": "personhomephone",
+				"type": "UTF8"
+			},
+			{
+				"name": "personmobilephone",
+				"type": "UTF8"
+			},
+			{
+				"name": "name",
+				"type": "UTF8"
+			},
+			{
+				"name": "phone",
+				"type": "UTF8"
+			},
+			{
+				"name": "personbirthdate",
+				"type": "INT96"
+			},
+			{
+				"name": "occupationclass",
+				"type": "UTF8"
+			},
+			{
+				"name": "persontitle",
+				"type": "UTF8"
+			},
+			{
+				"name": "warning_flag_type__c",
+				"type": "UTF8"
+			},
+			{
+				"name": "cas_date",
+				"type": "INT96"
+			},
+			{
+				"name": "LastUpdate",
+				"type": "UTF8"
+			},
+			{
+				"name": "CreatedBy",
+				"type": "UTF8"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

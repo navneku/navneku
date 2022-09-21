@@ -1,0 +1,488 @@
+{
+	"name": "metadata_test_sample",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEach1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "listtable",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('listtable').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Lookup1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ParquetSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "SqlDWSink"
+								},
+								"enableStaging": false,
+								"translator": {
+									"value": "@json(activity('Lookup1').output.firstRow.json_output)",
+									"type": "Expression"
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ADLS",
+									"type": "DatasetReference",
+									"parameters": {
+										"container_name": "jugaad",
+										"dir_name": {
+											"value": "@concat('dev/raw/KH/Full/metaver/',item().source_system,'/',item().adlsg2_file_name,'/',variables('Year'),'/',variables('Month'),'/',variables('Day'))",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@concat(item().source_system,'_',item().adlsg2_file_name,'_',variables('Year'),'_',variables('Month'),'_',variables('Day'))",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_SYN",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@item().SCHEMA_NAME",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@item().table_name",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Lookup1",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "Truncate_Table_Synapse",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderStoredProcedureName": "[dbo].[sp_getColumnMapping_2]",
+									"storedProcedureParameters": {
+										"schema_name": {
+											"type": "String",
+											"value": {
+												"value": "@item().SCHEMA_NAME",
+												"type": "Expression"
+											}
+										},
+										"table_name": {
+											"type": "String",
+											"value": {
+												"value": "@item().table_name",
+												"type": "Expression"
+											}
+										}
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SYN",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@item().SCHEMA_NAME",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@item().table_name",
+											"type": "Expression"
+										}
+									}
+								},
+								"firstRowOnly": true
+							}
+						},
+						{
+							"name": "Set Year",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Year",
+								"value": {
+									"value": "@formatDateTime(convertFromUtc(utcnow(), 'China Standard Time'),'yyyy')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set Month",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Month",
+								"value": {
+									"value": "@formatDateTime(convertFromUtc(utcnow(), 'China Standard Time'),'MM')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set Day",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Day",
+								"value": {
+									"value": "@formatDateTime(convertFromUtc(utcnow(), 'China Standard Time'),'dd')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set LastWeek_Year",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Last_Week_Year",
+								"value": {
+									"value": "@formatDateTime(adddays(convertFromUtc(utcnow(), 'China Standard Time'),-7),'yyyy')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set LastWeek_Month",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Last_Week_Month",
+								"value": {
+									"value": "@formatDateTime(adddays(convertFromUtc(utcnow(), 'China Standard Time'),-7),'MM')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Set LastWeek_Day",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "Last_Week_Day",
+								"value": {
+									"value": "@formatDateTime(adddays(convertFromUtc(utcnow(), 'China Standard Time'),-7),'dd')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "EDL_to_ADLSGen2",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Delete_ADLSGen2_Last_WeekData",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "OdbcSource",
+									"queryTimeout": "02:00:00"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_ODBC",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@item().edl_table_schema",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@item().edl_table_name",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS",
+									"type": "DatasetReference",
+									"parameters": {
+										"container_name": "jugaad",
+										"dir_name": {
+											"value": "@concat('dev/raw/KH/Full/metaver/',item().source_system,'/',item().adlsg2_file_name,'/',variables('Year'),'/',variables('Month'),'/',variables('Day'))",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@concat(item().source_system,'_',item().adlsg2_file_name,'_',variables('Year'),'_',variables('Month'),'_',variables('Day'))",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Delete_ADLSGen2_Last_WeekData",
+							"type": "Delete",
+							"dependsOn": [
+								{
+									"activity": "Set LastWeek_Day",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Set LastWeek_Month",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Set LastWeek_Year",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Set Day",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Set Year",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Set Month",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "DS_ADLS",
+									"type": "DatasetReference",
+									"parameters": {
+										"container_name": "jugaad",
+										"dir_name": {
+											"value": "@concat('dev/raw/KH/Full/',item().source_system,'/',item().adlsg2_file_name,'/',variables('Last_Week_Year'),'/',variables('Last_Week_Month'),'/',variables('Last_Week_Day'))",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@concat(item().source_system,'_',item().adlsg2_file_name,'_',variables('Last_Week_Year'),'_',variables('Last_Week_Month'),'_',variables('Last_Week_Day'))",
+											"type": "Expression"
+										}
+									}
+								},
+								"enableLogging": false,
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							}
+						},
+						{
+							"name": "Truncate_Table_Synapse",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "EDL_to_ADLSGen2",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlDWSource",
+									"sqlReaderQuery": {
+										"value": "@concat('truncate table ', item().SCHEMA_NAME,'.',item().table_name,';','select 0 id;')",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_SYN",
+									"type": "DatasetReference",
+									"parameters": {
+										"sch_name": {
+											"value": "@item().SCHEMA_NAME",
+											"type": "Expression"
+										},
+										"tbl_name": {
+											"value": "@item().table_name",
+											"type": "Expression"
+										}
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "listtable",
+				"description": "Retrieve source/target mapping from metadata table",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderQuery": "select distinct SCHEMA_NAME,table_name , edl_table_schema,edl_table_name,source_system, adlsg2_file_name\nfrom dbo.columnmapping_2",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": "dbo",
+							"tbl_name": "test_table_2"
+						}
+					},
+					"firstRowOnly": false
+				}
+			}
+		],
+		"variables": {
+			"Year": {
+				"type": "String"
+			},
+			"Month": {
+				"type": "String"
+			},
+			"Day": {
+				"type": "String"
+			},
+			"Last_Week_Year": {
+				"type": "String"
+			},
+			"Last_Week_Month": {
+				"type": "String"
+			},
+			"Last_Week_Day": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "Non-Prod testing and POC only"
+		},
+		"annotations": [],
+		"lastPublishTime": "2021-11-15T09:51:39Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

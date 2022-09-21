@@ -1,0 +1,47 @@
+{
+	"name": "SourceDataset_nci",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLSG2",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "CAS_TAIS_FILTER_2022_06_28_18_00.parquet",
+				"folderPath": "Published/KH/Full/EDB/TAIS_FILTER/2022/06/28/18",
+				"fileSystem": "dev"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "ruleset_nm",
+				"type": "UTF8"
+			},
+			{
+				"name": "fltr_lvl",
+				"type": "UTF8"
+			},
+			{
+				"name": "id",
+				"type": "UTF8"
+			},
+			{
+				"name": "fltr_nm",
+				"type": "UTF8"
+			},
+			{
+				"name": "LastUpdate",
+				"type": "UTF8"
+			},
+			{
+				"name": "CreatedBy",
+				"type": "UTF8"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

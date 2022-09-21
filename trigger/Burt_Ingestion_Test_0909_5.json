@@ -1,0 +1,25 @@
+{
+	"name": "Burt_Ingestion_Test_0909_5",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "PL_DataSupplyChainBus_Adobe",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 100,
+				"startTime": "2022-09-20T16:00:00",
+				"endTime": "2022-09-20T16:20:00",
+				"timeZone": "SE Asia Standard time"
+			}
+		}
+	}
+}

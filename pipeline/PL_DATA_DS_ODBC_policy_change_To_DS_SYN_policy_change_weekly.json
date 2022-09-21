@@ -1,0 +1,226 @@
+{
+	"name": "PL_DATA_DS_ODBC_policy_change_To_DS_SYN_policy_change_weekly",
+	"properties": {
+		"activities": [
+			{
+				"name": "ACT_DATA_DS_ODBC_policy_change_To_DS_ADLS_policy_change",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "ACT_CUSTOM_EXEC_GET_CONFIG_SETTING",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 2,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"additionalColumns": [
+							{
+								"name": "Timestamp",
+								"value": {
+									"value": "@pipeline().TriggerTime",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"parallelCopies": 16,
+					"enableSkipIncompatibleRow": true,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "Transaction Date",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "Transaction_Date"
+								}
+							},
+							{
+								"source": {
+									"name": "Issue Date",
+									"type": "DateTime"
+								},
+								"sink": {
+									"name": "Issue_Date"
+								}
+							},
+							{
+								"source": {
+									"name": "Policy number",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Policy_number"
+								}
+							},
+							{
+								"source": {
+									"name": "APE Adjustment",
+									"type": "String"
+								},
+								"sink": {
+									"name": "APE_Adjustment"
+								}
+							},
+							{
+								"source": {
+									"name": "Channel",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Channel"
+								}
+							},
+							{
+								"source": {
+									"name": "Reason",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Reason"
+								}
+							},
+							{
+								"source": {
+									"name": "AM Code",
+									"type": "String"
+								},
+								"sink": {
+									"name": "AM_Code"
+								}
+							},
+							{
+								"source": {
+									"name": "AM/Bank Location",
+									"type": "String"
+								},
+								"sink": {
+									"name": "AM_Bank_Location"
+								}
+							},
+							{
+								"source": {
+									"name": "Bank Refer",
+									"type": "String"
+								},
+								"sink": {
+									"name": "Bank_Refer"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_CSV_Policy_Change",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_ADLS",
+						"type": "DatasetReference",
+						"parameters": {
+							"container_name": "@activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_container",
+							"dir_name": "@concat(toLower(activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.env),activity('ACT_CUSTOM_EXEC_GET_CONFIG_SETTING').output.firstRow.config_value,pipeline().parameters.system_name,'/',pipeline().parameters.adlsg2_file_name,'/',String(formatDateTime(utcnow(),'yyyy')),'/',String(formatDateTime(utcnow(),'MM')),'/',String(formatDateTime(utcnow(),'dd')))",
+							"file_name": "@concat(pipeline().parameters.system_name,'_',pipeline().parameters.adlsg2_file_name,'_',String(formatDateTime(utcnow(),'yyyy')),'_',String(formatDateTime(utcnow(),'MM')),'_',String(formatDateTime(utcnow(),'dd')),'_',pipeline().parameters.load_frequency)"
+						}
+					}
+				]
+			},
+			{
+				"name": "ACT_CUSTOM_EXEC_GET_CONFIG_SETTING",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlDWSource",
+						"sqlReaderStoredProcedureName": "[config].[sp_get_configsetting]",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_SYN",
+						"type": "DatasetReference",
+						"parameters": {
+							"sch_name": "raw",
+							"tbl_name": "policy_change"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"edl_sch_name": {
+				"type": "string",
+				"defaultValue": "kh_dev_published_src_reports_db"
+			},
+			"edl_tbl_name": {
+				"type": "string",
+				"defaultValue": "policy_change"
+			},
+			"adlsg2_file_name": {
+				"type": "string",
+				"defaultValue": "policy_change"
+			},
+			"system_name": {
+				"type": "string",
+				"defaultValue": "reports"
+			},
+			"load_frequency": {
+				"type": "string",
+				"defaultValue": "weekly"
+			}
+		},
+		"folder": {
+			"name": "E2E-Pipeline-Weekly-Load/REPORTS"
+		},
+		"annotations": [],
+		"lastPublishTime": "2022-06-09T11:07:01Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
